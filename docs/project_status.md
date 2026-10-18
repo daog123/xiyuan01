@@ -14,6 +14,12 @@
 
 默认 FFN 中间元素上限 512、Attention 维度上限 64、可见前缀上限 16；一个任务顺序执行。Q 通过量化流输入。当前完整的是这些算子事务，不是完整 Transformer/LLM token 生成。
 
+## 2026-10-18 规划更新
+
+完整未来规划见 [README_ROADMAP.md](../README_ROADMAP.md)，包含 M0–M5 阶段任务、验收标准和 A/D、B/F、C/E 分工。下一次联合交付为小尺寸 Q/K/V 投影 → 自动 Q/KV 数据通路 → Attention → O 投影；随后接入 RMSNorm、RoPE、残差和 FFN，形成完整 Block。
+
+本次更新仅增加规划与文档入口，未修改 RTL、软件 API 或系统配置。上述 2026-10-15 验证仍对应实现基线 `af1f0a6`；未来功能需完成实现和回归后才能更新完成状态。
+
 ## 后续工作
 
 1. 连接 Q/K/V/O 投影后的量化和 Q 流 DMA，加入 RoPE、RMSNorm、残差及整张 Transformer 任务图。
