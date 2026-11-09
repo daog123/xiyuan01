@@ -1,5 +1,5 @@
 `timescale 1ns/1ps
-module tb_accelerator #(parameter integer GROUP_SIZE=32,ADDR_WIDTH=64,
+module tb_accelerator #(parameter integer GROUP_SIZE=32,ADDR_WIDTH=64,PERF_ONLY=0,READ_DELAY=-1,WRITE_DELAY=-1,
     parameter logic [63:0] BASE=64'h1_0000_0000);
     import accelerator_pkg::*;import task_desc_pkg::*;
     logic clk=0;always #5 clk=~clk;
@@ -20,7 +20,7 @@ module tb_accelerator #(parameter integer GROUP_SIZE=32,ADDR_WIDTH=64,
     integer reads,writes,b_count,checks=0,tasks=0,bytes_checked=0,previous_stage=0,expected_id;
     logic [7:0] expected[0:65535];
     accelerator_test_shell #(.GROUP_SIZE(GROUP_SIZE),.ADDR_WIDTH(ADDR_WIDTH)) dut(.*);
-    system_axi_memory #(.ADDR_WIDTH(ADDR_WIDTH),.BASE(BASE)) memory(.*);
+    system_axi_memory #(.ADDR_WIDTH(ADDR_WIDTH),.BASE(BASE),.READ_DELAY(READ_DELAY),.WRITE_DELAY(WRITE_DELAY)) memory(.*);
     task automatic require(input bit condition,input string message);
         checks++;if(!condition) $fatal(1,"ACCELERATOR_CHECK_FAILED %s stage=%0d time=%0t",message,stage,$time);
     endtask
@@ -90,6 +90,22 @@ module tb_accelerator #(parameter integer GROUP_SIZE=32,ADDR_WIDTH=64,
     endtask
     initial begin
         reset_all();
+        if(PERF_ONLY) begin
+            for(integer opcode=0;opcode<2;opcode++) begin
+                for(integer i=0;i<3;i++) begin
+                    load_case(i);
+                    if(opcode==0) begin
+                        checking=0;job_opcode=OP_LINEAR;expected_id=linear_task.desc.task_id;
+                        $readmemh($sformatf("g%0d_case%0d.linear.hex",GROUP_SIZE,i),expected);
+                    end
+                    submit();finish_job(0);compare_image();
+                    $display("PERF_RECORD opcode=%0d case=%0d group=%0d read_delay=%0d write_delay=%0d cycles=%0d reads=%0d writes=%0d acks=%0d bytes=%0d read_payload=%0d read_beats=%0d burst_reads=%0d",
+                        opcode,i,GROUP_SIZE,READ_DELAY,WRITE_DELAY,elapsed_cycles,reads,writes,b_count,65536,memory.read_payload,memory.read_beats,memory.burst_reads);
+                end
+            end
+            $display("PERFORMANCE_TESTS_PASS group=%0d read_delay=%0d tasks=%0d bytes=%0d",GROUP_SIZE,READ_DELAY,tasks,bytes_checked);
+            $finish;
+        end
         for(integer i=0;i<3;i++) begin load_case(i);submit();finish_job(0);compare_image();end
         load_case(0);checking=0;job_opcode=OP_LINEAR;expected_id=linear_task.desc.task_id;
         $readmemh($sformatf("g%0d_case0.linear.hex",GROUP_SIZE),expected);
@@ -123,3 +139,9 @@ module tb_accelerator #(parameter integer GROUP_SIZE=32,ADDR_WIDTH=64,
 endmodule
 module tb_accelerator12;tb_accelerator #(.GROUP_SIZE(12)) test();endmodule
 module tb_accelerator32;tb_accelerator #(.ADDR_WIDTH(32),.BASE(0)) test();endmodule
+
+// Controlled memory-service profiles; production profile remains 4x4 / group32.
+module tb_perf_r0;tb_accelerator #(.PERF_ONLY(1),.READ_DELAY(0),.WRITE_DELAY(4)) test();endmodule
+module tb_perf_r8;tb_accelerator #(.PERF_ONLY(1),.READ_DELAY(8),.WRITE_DELAY(4)) test();endmodule
+module tb_perf_r24;tb_accelerator #(.PERF_ONLY(1),.READ_DELAY(24),.WRITE_DELAY(4)) test();endmodule
+module tb_perf_g12;tb_accelerator #(.PERF_ONLY(1),.GROUP_SIZE(12),.READ_DELAY(8),.WRITE_DELAY(4)) test();endmodule

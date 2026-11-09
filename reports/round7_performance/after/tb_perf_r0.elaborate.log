@@ -1,0 +1,59 @@
+Vivado Simulator v2025.2
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+Running: E:/AMDDesignTools/2025.2/Vivado/bin/unwrapped/win64.o/xelab.exe tb_perf_r0 -s tb_perf_r0 -timescale 1ns/1ps 
+Multi-threading is on. Using 22 slave threads.
+Starting static elaboration
+Pass Through NonSizing Optimizer
+WARNING: [VRFC 10-3645] port 'total_cycles' remains unconnected for this instance [E:/speed-up/rtl/w4a8_team_top.sv:99]
+Completed static elaboration
+Starting simulation data flow analysis
+Completed simulation data flow analysis
+Time Resolution for simulation is 1ps
+Compiling package work.accelerator_pkg
+Compiling package work.task_desc_pkg
+Compiling package work.kv_cache_pkg
+Compiling package work.attention_pkg
+Compiling package work.llm_graph_pkg
+Compiling package work.w4a8_memory_pkg
+Compiling module work.w4a8_memory_validate
+Compiling module work.w4a8_task_adapter(ADDR_WIDTH=64,...
+Compiling module work.w4a8_axi_read_chunk
+Compiling module work.sync_sdp_ram(WIDTH=32,DEPTH=32)
+Compiling module work.requant_group(MAX_K=64)
+Compiling module work.requant_dynamic(MAX_K=64)
+Compiling module work.attention_q_dma_default
+Compiling module work.w4a8_task_adapter(ADDR_WIDTH=64)
+Compiling module work.w4a8_memory_packet(ADDR_WIDTH=64...
+Compiling module work.w4a8_axi_read_burst_default
+Compiling module work.w4a8_axi_write(ADDR_WIDTH=64)
+Compiling module work.w4a8_memory_bridge(ADDR_WIDTH=64...
+Compiling module work.sync_sdp_ram(WIDTH=64)
+Compiling module work.sync_sdp_ram(WIDTH=32,DEPTH=5,ST...
+Compiling module work.w4_unpack
+Compiling module work.mac_pe
+Compiling module work.w4a8_compute_array_default
+Compiling module work.sync_sdp_ram(WIDTH=32,DEPTH=4,ST...
+Compiling module work.sync_sdp_ram(WIDTH=64,DEPTH=4,ST...
+Compiling module work.w4a8_wave(TILE_K=32)
+Compiling module work.w4a8_team_top(ADDR_WIDTH=64,TILE...
+Compiling module work.storage_axi_byte_write(ADDR_WIDT...
+Compiling module work.sync_sdp_ram(WIDTH=32)
+Compiling module work.silu_sigmoid_lut
+Compiling module work.swiglu_element
+Compiling module work.ffn_bridge_default
+Compiling module work.ffn_dma
+Compiling module work.accelerator_top(TILE_K=32)
+Compiling module work.kv_cache_address(ADDR_WIDTH=64,M...
+Compiling module work.w4a8_axi_read(ADDR_WIDTH=64)
+Compiling module work.kv_cache(ADDR_WIDTH=64,MAX_TOKEN...
+Compiling module work.attention_exp_lut
+Compiling module work.attention_compute_default
+Compiling module work.attention_kv_top
+Compiling module work.llm_top
+Compiling module work.llm_graph_top_default
+Compiling module work.accelerator_test_shell_default
+Compiling module work.system_axi_memory(READ_DELAY=0,W...
+Compiling module work.tb_accelerator(PERF_ONLY=1,READ_...
+Compiling module work.tb_perf_r0
+Built simulation snapshot tb_perf_r0

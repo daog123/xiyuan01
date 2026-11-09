@@ -1,5 +1,5 @@
 module accelerator_test_shell #(
-    parameter integer ADDR_WIDTH=64,GROUP_SIZE=32,ROWS=4,COLS=4,TILE_K=8,
+    parameter integer ADDR_WIDTH=64,GROUP_SIZE=32,ROWS=4,COLS=4,TILE_K=32,
     parameter integer MAX_M=64,MAX_N=64,MAX_K=4096,MAX_H=64,CAPACITY=512
 )(
     input logic clk,rst,
@@ -22,9 +22,9 @@ module accelerator_test_shell #(
     input logic bvalid,output logic bready,input logic [3:0] bid,input logic [1:0] bresp
 );
 
-    llm_top #(.ADDR_WIDTH(ADDR_WIDTH),.GROUP_SIZE(GROUP_SIZE),.ROWS(ROWS),.COLS(COLS),.TILE_K(TILE_K),
+    llm_graph_top #(.ADDR_WIDTH(ADDR_WIDTH),.GROUP_SIZE(GROUP_SIZE),.ROWS(ROWS),.COLS(COLS),.TILE_K(TILE_K),
         .MAX_M(MAX_M),.MAX_N(MAX_N),.MAX_K(MAX_K),.MAX_H(MAX_H),.CAPACITY(CAPACITY)) dut(
-        .kv_config('0),.kv_command('0),.attention_task('0),.configured(),
+        .qkv_plan('0),.kv_config('0),.kv_command('0),.attention_task('0),.configured(),
         .append_valid(1'b0),.append_ready(),.append_data(8'd0),.append_last(1'b0),
         .read_valid(),.read_ready(1'b1),.read_data(),.read_last(),
         .q_valid(1'b0),.q_ready(),.q_data(8'd0),.q_scale(16'd0),.q_last(1'b0),.*);
@@ -56,7 +56,7 @@ module attention_test_shell #(parameter integer ADDR_WIDTH=64,GROUP_SIZE=32,
     wire job_ready;
     wire [7:0] job_opcode=query_valid?accelerator_pkg::OP_ATTENTION:cfg_valid?accelerator_pkg::OP_KV_CONFIG:accelerator_pkg::OP_KV_COMMAND;
     assign query_ready=job_ready;assign cfg_ready=job_ready;assign cmd_ready=job_ready;
-    llm_top #(.ADDR_WIDTH(ADDR_WIDTH),.GROUP_SIZE(GROUP_SIZE),.MAX_DIM(MAX_DIM),.MAX_TOKENS(MAX_TOKENS)) dut(
-        .kv_config(cfg_desc),.kv_command(cmd_desc),.attention_task(query_desc),.linear_task('0),.ffn_plan('0),
+    llm_graph_top #(.ADDR_WIDTH(ADDR_WIDTH),.GROUP_SIZE(GROUP_SIZE),.MAX_DIM(MAX_DIM),.MAX_TOKENS(MAX_TOKENS)) dut(
+        .qkv_plan('0),.kv_config(cfg_desc),.kv_command(cmd_desc),.attention_task(query_desc),.linear_task('0),.ffn_plan('0),
         .load_pause(1'b0),.post_pause(1'b0),.array_pause(1'b0),.stage(),.elapsed_cycles(),.activation_written(),.scale_written(),.*);
 endmodule

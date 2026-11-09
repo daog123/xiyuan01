@@ -1,0 +1,2 @@
+# Preserve byte identity for the recorded source and experiment SHA256 manifests.
+* -text

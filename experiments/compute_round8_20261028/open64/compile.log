@@ -1,0 +1,22 @@
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/build/upstream_compute/sources/openTPU/rtl/top/otpu_pkg.sv" into library work
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/build/upstream_compute/sources/openTPU/rtl/vpu/otpu_fp.sv" into library work
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/build/upstream_compute/sources/openTPU/rtl/vpu/otpu_fpipe.sv" into library work
+INFO: [VRFC 10-311] analyzing module otpu_delay
+INFO: [VRFC 10-311] analyzing module otpu_fmul
+INFO: [VRFC 10-311] analyzing module otpu_fadd
+INFO: [VRFC 10-311] analyzing module otpu_fadd2
+INFO: [VRFC 10-311] analyzing module otpu_fmadd
+INFO: [VRFC 10-311] analyzing module otpu_fmma
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/build/upstream_compute/sources/openTPU/rtl/tech/generic/otpu_tech_dsp.sv" into library work
+INFO: [VRFC 10-311] analyzing module otpu_pe
+INFO: [VRFC 10-311] analyzing module otpu_colend
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/build/upstream_compute/sources/openTPU/rtl/tech/generic/otpu_tech_ram.sv" into library work
+INFO: [VRFC 10-311] analyzing module otpu_ram_1r1w
+INFO: [VRFC 10-311] analyzing module otpu_ram_1r1w_be
+INFO: [VRFC 10-311] analyzing module otpu_ram_1rw
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/Lenovo/Documents/ChatGPT/��Դ��Ŀ/.round8_core_work/open64/mxu_xsim.sv" into library work
+INFO: [VRFC 10-311] analyzing module otpu_mxu
+INFO: [VRFC 10-311] analyzing module otpu_ram_sdp
+INFO: [VRFC 10-311] analyzing module otpu_skew
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/Lenovo/Documents/ChatGPT/��Դ��Ŀ/.round8_core_work/open64/testbench.sv" into library work
+INFO: [VRFC 10-311] analyzing module tb_opentpu_controlled

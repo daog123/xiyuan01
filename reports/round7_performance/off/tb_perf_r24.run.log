@@ -1,0 +1,24 @@
+
+****** xsim v2025.2 (64-bit)
+  **** SW Build 6299465 on Fri Nov 14 19:35:11 GMT 2025
+  **** IP Build 6300035 on Fri Nov 14 10:48:45 MST 2025
+  **** SharedData Build 6298862 on Thu Nov 13 04:50:51 MST 2025
+  **** Start of session at: Mon Oct 26 22:18:21 2026
+    ** Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+    ** Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+
+source xsim.dir/tb_perf_r24/xsim_script.tcl
+# xsim {tb_perf_r24} -autoloadwcfg -tclbatch {E:/speed-up/scripts/run_xsim.tcl}
+Time resolution is 1 ps
+source E:/speed-up/scripts/run_xsim.tcl
+## run 20 ms
+PERF_RECORD opcode=0 case=0 group=32 read_delay=24 write_delay=4 cycles=7475 reads=254 writes=37 acks=37 bytes=65536 read_payload=483 read_beats=254 burst_reads=0
+PERF_RECORD opcode=0 case=1 group=32 read_delay=24 write_delay=4 cycles=12773 reads=440 writes=87 acks=87 bytes=65536 read_payload=839 read_beats=440 burst_reads=0
+PERF_RECORD opcode=0 case=2 group=32 read_delay=24 write_delay=4 cycles=4696 reads=160 writes=50 acks=50 bytes=65536 read_payload=279 read_beats=160 burst_reads=0
+PERF_RECORD opcode=1 case=0 group=32 read_delay=24 write_delay=4 cycles=21667 reads=680 writes=120 acks=120 bytes=65536 read_payload=1422 read_beats=680 burst_reads=0
+PERF_RECORD opcode=1 case=1 group=32 read_delay=24 write_delay=4 cycles=38270 reads=1182 writes=288 acks=288 bytes=65536 read_payload=2592 read_beats=1182 burst_reads=0
+PERF_RECORD opcode=1 case=2 group=32 read_delay=24 write_delay=4 cycles=16371 reads=480 writes=160 acks=160 bytes=65536 read_payload=1057 read_beats=480 burst_reads=0
+PERFORMANCE_TESTS_PASS group=32 read_delay=24 tasks=6 bytes=393216
+$finish called at time : 1013310 ns : File "E:/speed-up/tb/tb_accelerator.sv" Line 107
+## quit
+INFO: [Common 17-206] Exiting xsim at Mon Oct 26 22:18:26 2026...

@@ -1,0 +1,27 @@
+{
+  "target_pci": "0000:84:00.0",
+  "timestamp": "2026-10-27T17:21:39.231618+08:00",
+  "management": {
+    "version": "0xe1e1c113",
+    "done": "0x1",
+    "link": "0x3"
+  },
+  "dma_status": {
+    "h2c_0": "0x0",
+    "h2c_1": "0x0",
+    "h2c_2": "0x0",
+    "h2c_3": "0x0",
+    "c2h_0": "0x0",
+    "c2h_1": "0x0",
+    "c2h_2": "0x0",
+    "c2h_3": "0x0"
+  },
+  "enumerated_cards": [
+    "0000:84:00.0",
+    "0000:d4:00.0",
+    "0000:45:00.0",
+    "0000:32:00.0"
+  ],
+  "reference_control_status": "0x30",
+  "status": "PASS"
+}

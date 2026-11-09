@@ -1,0 +1,19 @@
+
+****** xsim v2025.2 (64-bit)
+  **** SW Build 6299465 on Fri Nov 14 19:35:11 GMT 2025
+  **** IP Build 6300035 on Fri Nov 14 10:48:45 MST 2025
+  **** SharedData Build 6298862 on Thu Nov 13 04:50:51 MST 2025
+  **** Start of session at: Wed Oct 28 20:38:24 2026
+    ** Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+    ** Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+
+source xsim.dir/streamsim/xsim_script.tcl
+# xsim {streamsim} -testplusarg corrupt_expected -autoloadwcfg -tclbatch {E:/speed-up/scripts/run_xsim.tcl}
+Time resolution is 1 ps
+source E:/speed-up/scripts/run_xsim.tcl
+## run 20 ms
+Fatal: STREAM_FAILED numeric output n=0 got=-589824 expected=-589823 case=0 mode=0 time=1125000
+Time: 1125 ns  Iteration: 0  Process: /tb_stream/require  Scope: tb_stream.require  File: C:/Users/Lenovo/Documents/ChatGPT/��Դ��Ŀ/.round8_core_work/tb_stream.sv Line: 24
+$finish called at time : 1125 ns
+## quit
+INFO: [Common 17-206] Exiting xsim at Wed Oct 28 20:38:26 2026...

@@ -1,0 +1,3 @@
+# Intentional, bounded historical run evidence, not live build output.
+!*.log
+!**/*.log

@@ -1,0 +1,11 @@
+VOLATILE_PROGRAM_BEGIN file=/root/fpga/DynamicStream-HLS/phase1/matrix_v1/phase1_matrix_engine_v1.bit bytes=80159236 padded=80159264 initial_done=00000000 initial_link=00000000
+BITSTREAM_STAGED bytes=80159264
+BITSTREAM_STAGING_READBACK_PASS bytes=80159264
+DONE_AFTER_CLEAR=00000001
+PROGRAM_ASSERTED done=00000006 init=00000000 saw_done_low=1
+INIT_OBSERVED ready=1 init=00000001 done=00000006 link=00000000
+VOLATILE_PROGRAM_PASS done=00000001 link=00000000 saw_done_low=1 volatile_only=true
+FINAL_RAW_INIT=00000000 DONE=00000001 LINK=00000000
+POST_PROGRAM_SYSTEM_RESET_PASS version=e1e1c113 link=00000003 done=00000001
+DMA_READ device=/root/fpga/xiyuan_midterm_20261027/array_bist/run-array-20261027-171928-zxojTn/dev/c2h_0 addr=0x20d0000020 requested=4 actual=4 seconds=0.000028 errno=0
+READ_HEX 30 00 00 00

@@ -1,5 +1,5 @@
 `timescale 1ns/1ps
-module tb_attention #(parameter integer GROUP_SIZE=4,ADDR_WIDTH=64,
+module tb_attention #(parameter integer GROUP_SIZE=4,ADDR_WIDTH=64,MEMORY_Q=0,
     parameter logic [63:0] BASE=64'h2_0000_0000);
     import kv_cache_pkg::*;import attention_pkg::*;import task_desc_pkg::*;
     logic clk=0;always #5 clk=~clk;
@@ -44,6 +44,10 @@ module tb_attention #(parameter integer GROUP_SIZE=4,ADDR_WIDTH=64,
             queries[c]='0;
             rc=$fscanf(f,"%d %d %d %d %d",queries[c].task_id,queries[c].tokens,queries[c].dimension,queries[c].score_scale,queries[c].y_addr);
             require(rc==5,"query descriptor");queries[c].y_addr+=BASE;queries[c].y_bytes=4*32'(queries[c].dimension);
+            if(MEMORY_Q) begin
+                queries[c].q_source=1;queries[c].q_addr=BASE+22001+c*128;queries[c].qs_addr=BASE+26001+c*128;
+                queries[c].q_bytes=dimension;queries[c].qs_bytes=2*((dimension+GROUP_SIZE-1)/GROUP_SIZE);
+            end
             for(integer i=0;i<dimension;i++) begin rc=$fscanf(f,"%d",qs_data[c][i]);require(rc==1,"Q byte");end
             for(integer i=0;i<dimension;i++) begin rc=$fscanf(f,"%d",qs_scale[c][i]);require(rc==1,"Q scale");end
         end
@@ -53,13 +57,23 @@ module tb_attention #(parameter integer GROUP_SIZE=4,ADDR_WIDTH=64,
         for(integer i=0;i<65536;i++) memory.mem[i]=8'hcd;
         $readmemh($sformatf("g%0d_permissions.hex",GROUP_SIZE),memory.read_allowed);
         $readmemh($sformatf("g%0d_permissions.hex",GROUP_SIZE),memory.write_allowed);
+        if(MEMORY_Q) for(integer c=0;c<5;c++) begin
+            for(integer i=0;i<dimension;i++) begin
+                memory.mem[22001+c*128+i]=8'(qs_data[c][i]);memory.read_allowed[22001+c*128+i]=1;
+            end
+            for(integer gidx=0;gidx<(dimension+GROUP_SIZE-1)/GROUP_SIZE;gidx++) begin
+                memory.mem[26001+c*128+2*gidx]=8'(qs_scale[c][gidx*GROUP_SIZE]);
+                memory.mem[26002+c*128+2*gidx]=8'(qs_scale[c][gidx*GROUP_SIZE]>>8);
+                memory.read_allowed[26001+c*128+2*gidx]=1;memory.read_allowed[26002+c*128+2*gidx]=1;
+            end
+        end
     endtask
     task automatic submit_query(input integer c);
         @(negedge clk);require(query_ready,"query admission");query_desc=queries[c];expected_id=queries[c].task_id;
         query_valid=1;@(negedge clk);query_valid=0;query_desc='0;
     endtask
     task automatic feed_query(input integer c,input bit malformed);
-        for(integer i=0;i<(malformed?1:dimension);i++) begin
+        for(integer i=0;i<((MEMORY_Q && !malformed)?0:(malformed?1:dimension));i++) begin
             @(negedge clk);q_valid=1;q_data=8'(qs_data[c][i]);q_scale=16'(qs_scale[c][i]);q_last=malformed || i+1==dimension;
             begin integer wd;wd=0;while(!q_ready) begin @(negedge clk);wd++;require(wd<1000,"Q handshake watchdog");end end
             @(negedge clk);q_valid=0;
@@ -80,6 +94,13 @@ module tb_attention #(parameter integer GROUP_SIZE=4,ADDR_WIDTH=64,
     endtask
     task automatic compare_image(input integer c);
         $readmemh($sformatf("g%0d_expected%0d.hex",GROUP_SIZE,c),expected);
+        if(MEMORY_Q) for(integer cidx=0;cidx<5;cidx++) begin
+            for(integer i=0;i<dimension;i++) expected[22001+cidx*128+i]=8'(qs_data[cidx][i]);
+            for(integer gidx=0;gidx<(dimension+GROUP_SIZE-1)/GROUP_SIZE;gidx++) begin
+                expected[26001+cidx*128+2*gidx]=8'(qs_scale[cidx][gidx*GROUP_SIZE]);
+                expected[26002+cidx*128+2*gidx]=8'(qs_scale[cidx][gidx*GROUP_SIZE]>>8);
+            end
+        end
         if($test$plusargs("corrupt_expected")) expected[18000]^=1;
         for(integer i=0;i<65536;i++) begin
             require(memory.mem[i]===expected[i],$sformatf("full image byte=%0d actual=%h expected=%h",i,memory.mem[i],expected[i]));bytes_checked++;
@@ -99,7 +120,11 @@ module tb_attention #(parameter integer GROUP_SIZE=4,ADDR_WIDTH=64,
             if(c==0) append_batch(0,1);if(c==1) append_batch(1,2);if(c==2) append_batch(3,4);
             submit_query(c);feed_query(c,0);finish(0);compare_image(c);
         end
-        submit_query(0);feed_query(0,1);finish(STATUS_MEMORY_PROTOCOL);
+        if(!MEMORY_Q) begin submit_query(0);feed_query(0,1);finish(STATUS_MEMORY_PROTOCOL);end
+        else begin
+            @(negedge clk);query_desc=queries[0];query_desc.q_bytes=dimension-1;expected_id=query_desc.task_id;query_valid=1;
+            @(negedge clk);query_valid=0;finish(STATUS_BAD_REGION);
+        end
         submit_query(0);inject_r=1;feed_query(0,0);finish(STATUS_READ_ERROR);inject_r=0;
         submit_query(0);feed_query(0,0);hold_b=1;wait(wvalid && wready);repeat(80) @(negedge clk);
         require(!completion_valid && !query_ready,"attention completion waits for B response");
@@ -112,7 +137,34 @@ module tb_attention #(parameter integer GROUP_SIZE=4,ADDR_WIDTH=64,
         @(negedge clk);query_valid=0;finish(STATUS_BAD_REGION);
         @(negedge clk);query_desc=queries[0];query_desc.y_addr=64'hffff_ffff_ffff_fffc;query_valid=1;expected_id=query_desc.task_id;
         @(negedge clk);query_valid=0;finish(STATUS_BAD_REGION);
-        $display("ATTENTION_TESTS_PASS group=%0d address_width=%0d tasks=%0d bytes=%0d checks=%0d",GROUP_SIZE,ADDR_WIDTH,tasks,bytes_checked,checks);
+        if(MEMORY_Q) begin
+            for(integer kind=0;kind<7;kind++) begin
+                integer before_reads,before_writes;
+                @(negedge clk);query_desc=queries[0];expected_id=query_desc.task_id;
+                case(kind)
+                    0:query_desc.q_source=3;
+                    1:query_desc.qs_bytes=1;
+                    2:query_desc.q_addr=64'hffff_ffff_ffff_fffc;
+                    3:query_desc.qs_addr=64'hffff_ffff_ffff_ffff;
+                    4:query_desc.q_addr=query_desc.y_addr;
+                    5:query_desc.qs_addr=query_desc.q_addr;
+                    6:query_desc.q_source=0;
+                endcase
+                before_reads=reads;before_writes=writes;query_valid=1;
+                @(negedge clk);query_valid=0;finish((kind==0 || kind==6)?STATUS_BAD_FLAGS:STATUS_BAD_REGION);
+                require(reads==before_reads && writes==before_writes,"invalid Q allocation rejected before any access");
+            end
+            hold_r=1;submit_query(0);q_valid=1;q_data=127;q_scale=1;q_last=1;
+            repeat(80) begin @(negedge clk);require(!completion_valid && !q_ready,"memory Q stalls without accepting host Q");end
+            hold_r=0;finish(0);q_valid=0;compare_image(4);
+            // Reset both the DUT and fabric while an actual Q read is pending.
+            hold_r=1;submit_query(0);wait(arvalid && arready);repeat(3) @(negedge clk);
+            rst=1;repeat(4) @(negedge clk);hold_r=0;rst=0;repeat(2) @(negedge clk);
+            require(!configured && !completion_valid,"pending Q reset invalidates metadata/completion");
+            cfg_valid=1;expected_id=800;@(negedge clk);cfg_valid=0;finish(0);
+            append_batch(0,7);submit_query(0);finish(0);compare_image(4);
+        end
+        $display("ATTENTION_TESTS_PASS group=%0d address_width=%0d memory_q=%0d tasks=%0d bytes=%0d checks=%0d",GROUP_SIZE,ADDR_WIDTH,MEMORY_Q,tasks,bytes_checked,checks);
         $finish;
     end
     initial begin #200000000;$fatal(1,"ATTENTION_GLOBAL_TIMEOUT");end
@@ -121,3 +173,8 @@ endmodule
 module tb_attention3;tb_attention #(.GROUP_SIZE(3)) test();endmodule
 module tb_attention32;tb_attention #(.ADDR_WIDTH(32),.BASE(0)) test();endmodule
 module tb_attention_default;tb_attention #(.GROUP_SIZE(32)) test();endmodule
+
+module tb_attention_dma;tb_attention #(.MEMORY_Q(1)) test();endmodule
+module tb_attention_dma3;tb_attention #(.GROUP_SIZE(3),.MEMORY_Q(1)) test();endmodule
+module tb_attention_dma32;tb_attention #(.ADDR_WIDTH(32),.BASE(0),.MEMORY_Q(1)) test();endmodule
+module tb_attention_dma_default;tb_attention #(.GROUP_SIZE(32),.MEMORY_Q(1)) test();endmodule

@@ -1,4 +1,4 @@
-"""Version 2 host API shared by llm_top, project configuration and examples.
+"""Version 5 host API shared by llm_top, project configuration and examples.
 
 The transport owns register/stream access; this module does not pretend that a
 PCIe/DDR driver exists. All completions come from the actual transport.
@@ -8,13 +8,15 @@ from enum import IntEnum
 from .w4a8_memory_task import W4A8MemoryTask
 from .w4a8_runtime import W4A8Runtime
 
-ABI_VERSION=2
+ABI_VERSION=5
 class Opcode(IntEnum):
     LINEAR=0
     FFN=1
     ATTENTION=2
     KV_CONFIG=3
     KV_COMMAND=4
+    Q_ATTENTION=5
+    QKV_ATTENTION=6
 
 def overlap(a,n,b,m):return a<b+m and b<a+n
 def bounded_wire(t):
@@ -97,14 +99,32 @@ class AttentionTask:
     score_scale:int
     y_addr:int
     y_bytes:int
+    q_source:int=0
+    q_addr:int=0
+    qs_addr:int=0
+    q_bytes:int=0
+    qs_bytes:int=0
 
-    def validate(self,*,addr_width=64,max_dim=64,max_tokens=16,config=None,committed=None,**_):
+    def validate(self,*,addr_width=64,max_dim=64,max_tokens=16,group_size=32,config=None,committed=None,**_):
         if not (0<=self.task_id<1<<32 and 0<=self.layer<4 and 0<=self.head<8 and
                 0<self.tokens<=max_tokens and 0<self.dimension<=max_dim and 0<self.score_scale<1<<16):
             raise ValueError('unsupported attention shape or score scale')
         if not (0<=self.y_addr<1<<addr_width and self.y_addr%4==0 and
                 4*self.dimension<=self.y_bytes<1<<32 and self.y_addr+self.y_bytes<=1<<addr_width):
             raise ValueError('invalid attention output allocation')
+        if self.q_source not in (0,1,2):raise ValueError('unsupported Q source')
+        if self.q_source==0:
+            if any((self.q_addr,self.qs_addr,self.q_bytes,self.qs_bytes)):
+                raise ValueError('stream Q must have zero memory allocation fields')
+        else:
+            regions=[(self.q_addr,self.q_bytes,self.dimension*(4 if self.q_source==2 else 1))]
+            if self.q_source==1:regions.append((self.qs_addr,self.qs_bytes,2*((self.dimension+group_size-1)//group_size)))
+            elif self.q_addr%4 or self.qs_addr or self.qs_bytes:raise ValueError('Q16 query requires aligned values and zero scale allocation fields')
+            for base,size,width in regions:
+                if not (0<=base<1<<addr_width and width<=size<1<<32 and base+size<=1<<addr_width):
+                    raise ValueError('invalid Q input allocation')
+                if overlap(self.y_addr,self.y_bytes,base,size):raise ValueError('Q input overlaps output')
+            if self.q_source==1 and overlap(self.q_addr,self.q_bytes,self.qs_addr,self.qs_bytes):raise ValueError('Q and scale allocations overlap')
         if committed is not None and self.tokens>committed:raise ValueError('attention reads uncommitted tokens')
         if config is not None:
             if self.dimension!=config.dimension or self.layer>=config.layers or self.head>=config.heads:
@@ -141,6 +161,71 @@ class KVCommand:
         return self
 
 @dataclass(frozen=True)
+class ProjectedAttentionPlan:
+    projection:W4A8MemoryTask
+    attention:AttentionTask
+
+    @property
+    def task_id(self):return self.attention.task_id
+
+    def validate(self,*,max_m=64,max_n=64,max_k=4096,group_size=32,addr_width=64,config=None,committed=None):
+        self.projection.validate(max_m=max_m,max_n=max_n,max_k=max_k,group_size=group_size,addr_width=addr_width)
+        a=self.attention;d=self.projection.descriptor
+        a.validate(group_size=group_size,addr_width=addr_width,config=config,committed=committed)
+        if d.m!=1 or d.n!=a.dimension or a.q_source!=2 or a.q_addr!=d.y_addr or a.q_bytes!=self.projection.y_bytes:
+            raise ValueError('projection must produce the single Q16 query allocation')
+        for field in ('a','w','sx','sw'):
+            if overlap(a.y_addr,a.y_bytes,getattr(d,field+'_addr'),getattr(self.projection,field+'_bytes')):
+                raise ValueError('attention output aliases a live projection input')
+        if config is not None and any(overlap(d.y_addr,self.projection.y_bytes,b,n) for b,n in zip(config.base,config.bytes)):
+            raise ValueError('projection workspace aliases persistent KV storage')
+        return self
+
+    def to_dict(self):return dict(linear_task=bounded_wire(self.projection),attention_task=asdict(self.attention))
+
+@dataclass(frozen=True)
+class QKVAttentionPlan:
+    q_task:W4A8MemoryTask
+    k_task:W4A8MemoryTask
+    v_task:W4A8MemoryTask
+    attention:AttentionTask
+    token:int=0
+
+    @property
+    def task_id(self):return self.attention.task_id
+
+    def validate(self,*,max_m=64,max_n=64,max_k=4096,group_size=32,addr_width=64,config=None,committed=None):
+        nodes=(self.q_task,self.k_task,self.v_task);a=self.attention
+        for t in nodes:t.validate(max_m=max_m,max_n=max_n,max_k=max_k,group_size=group_size,addr_width=addr_width)
+        a.validate(group_size=group_size,addr_width=addr_width,config=config)
+        if len({t.task_id for t in nodes})!=3:raise ValueError('projection IDs must be distinct')
+        if not 0<=self.token<16 or a.tokens!=self.token+1 or (config is not None and self.token>=config.capacity):
+            raise ValueError('single-token graph must query its newly appended prefix')
+        if committed is not None and self.token!=committed:raise ValueError('append token differs from committed length')
+        if any(t.m!=1 or t.n!=a.dimension or t.descriptor.k!=nodes[0].descriptor.k for t in nodes):
+            raise ValueError('Q/K/V must be compatible single-query projections')
+        if a.q_source!=2 or a.q_addr!=self.q_task.y_addr or a.q_bytes!=self.q_task.y_bytes:
+            raise ValueError('graph query must use its Q16 projection allocation')
+        outputs=[(t.y_addr,t.y_bytes)for t in nodes]+[(a.y_addr,a.y_bytes)]
+        inputs=[(getattr(t.descriptor,f+'_addr'),getattr(t,f+'_bytes'))for t in nodes for f in ('a','w','sx','sw')]
+        if config is not None:inputs+=list(zip(config.base,config.bytes))
+        for i,(b,n) in enumerate(outputs):
+            if any(overlap(b,n,c,m)for c,m in inputs+outputs[i+1:]):raise ValueError('graph output aliases live input, KV or workspace')
+        return self
+
+    def kv_committed(self,completion):
+        if completion.task_id!=self.task_id:raise ValueError('completion belongs to a different graph')
+        if completion.status==0:return True
+        if completion.stage is None:return None
+        if completion.stage==13:return True
+        if completion.stage in (0,8,9,10,11,12):return False
+        return None
+
+    def resume_query(self):return ProjectedAttentionPlan(self.q_task,self.attention)
+
+    def to_dict(self):return dict(qkv_plan=dict(q_task=bounded_wire(self.q_task),k_task=bounded_wire(self.k_task),v_task=bounded_wire(self.v_task),attention=asdict(self.attention),token=self.token))
+
+@dataclass(frozen=True)
 class SystemJob:
     opcode:Opcode
     payload:object
@@ -150,13 +235,14 @@ class SystemJob:
 
     def validate(self,*,max_m=64,max_n=64,max_k=4096,group_size=32,addr_width=64):
         limits=dict(max_m=max_m,max_n=max_n,max_k=max_k,group_size=group_size,addr_width=addr_width)
-        expected={Opcode.LINEAR:W4A8MemoryTask,Opcode.FFN:FFNPlan,Opcode.ATTENTION:AttentionTask,Opcode.KV_CONFIG:KVConfig,Opcode.KV_COMMAND:KVCommand}
+        expected={Opcode.LINEAR:W4A8MemoryTask,Opcode.FFN:FFNPlan,Opcode.ATTENTION:AttentionTask,Opcode.KV_CONFIG:KVConfig,Opcode.KV_COMMAND:KVCommand,Opcode.Q_ATTENTION:ProjectedAttentionPlan,Opcode.QKV_ATTENTION:QKVAttentionPlan}
         if self.opcode not in expected or not isinstance(self.payload,expected[self.opcode]):
             raise ValueError('unsupported opcode/payload')
         self.payload.validate(**limits)
         return self
 
     def to_dict(self):
+        if self.opcode in (Opcode.Q_ATTENTION,Opcode.QKV_ATTENTION):return dict(abi_version=ABI_VERSION,job_opcode=int(self.opcode),**self.payload.to_dict())
         field={Opcode.LINEAR:'linear_task',Opcode.FFN:'ffn_plan',Opcode.ATTENTION:'attention_task',Opcode.KV_CONFIG:'kv_config',Opcode.KV_COMMAND:'kv_command'}[self.opcode]
         data=bounded_wire(self.payload) if self.opcode==Opcode.LINEAR else self.payload.to_dict() if self.opcode==Opcode.FFN else asdict(self.payload)
         return dict(abi_version=ABI_VERSION,job_opcode=int(self.opcode),**{field:data})

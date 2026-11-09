@@ -1,0 +1,4 @@
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/Lenovo/Documents/ChatGPT/��Դ��Ŀ/.round8_core_work/rtl/w4a8_gemv_stream.sv" into library work
+INFO: [VRFC 10-311] analyzing module w4a8_gemv_stream
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/Lenovo/Documents/ChatGPT/��Դ��Ŀ/.round8_core_work/tb_stream.sv" into library work
+INFO: [VRFC 10-311] analyzing module tb_stream

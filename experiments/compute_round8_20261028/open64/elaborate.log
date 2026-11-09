@@ -1,0 +1,72 @@
+Vivado Simulator v2025.2
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+Running: E:/AMDDesignTools/2025.2/Vivado/bin/unwrapped/win64.o/xelab.exe tb_opentpu_controlled -s open64 -timescale 1ns/1ps 
+Multi-threading is on. Using 22 slave threads.
+Starting static elaboration
+Pass Through NonSizing Optimizer
+WARNING: [VRFC 10-3091] actual bit length 4 differs from formal bit length 1 for port 'act_hi' [C:/Users/Lenovo/Documents/ChatGPT/��Դ��Ŀ/.round8_core_work/open64/testbench.sv:21]
+Completed static elaboration
+Starting simulation data flow analysis
+Completed simulation data flow analysis
+Time Resolution for simulation is 1ps
+Compiling package work.otpu_pkg
+Compiling package work.otpu_fp
+Compiling module work.otpu_ram_1r1w(W=64,N=128)
+Compiling module work.otpu_ram_1r1w(W=144,N=64)
+Compiling module work.otpu_ram_1r1w(W=80,N=64)
+Compiling module work.otpu_skew(W=16,N=0)
+Compiling module work.otpu_skew(W=16)
+Compiling module work.otpu_skew(W=16,N=2)
+Compiling module work.otpu_skew(W=16,N=3)
+Compiling module work.otpu_skew(W=16,N=4)
+Compiling module work.otpu_skew(W=16,N=5)
+Compiling module work.otpu_skew(W=16,N=6)
+Compiling module work.otpu_skew(W=16,N=7)
+Compiling module work.otpu_skew(W=16,N=8)
+Compiling module work.otpu_skew(W=16,N=9)
+Compiling module work.otpu_skew(W=16,N=10)
+Compiling module work.otpu_skew(W=16,N=11)
+Compiling module work.otpu_skew(W=16,N=12)
+Compiling module work.otpu_skew(W=16,N=13)
+Compiling module work.otpu_skew(W=16,N=14)
+Compiling module work.otpu_skew(W=16,N=15)
+Compiling module work.otpu_skew(N=0)
+Compiling module work.otpu_pe(FIRST=1'b1)
+Compiling module work.otpu_skew_default
+Compiling module work.otpu_pe_default
+Compiling module work.otpu_skew(N=2)
+Compiling module work.otpu_skew(N=3)
+Compiling module work.otpu_skew(N=4)
+Compiling module work.otpu_skew(N=5)
+Compiling module work.otpu_skew(N=6)
+Compiling module work.otpu_skew(N=7)
+Compiling module work.otpu_skew(N=8)
+Compiling module work.otpu_skew(N=9)
+Compiling module work.otpu_skew(N=10)
+Compiling module work.otpu_skew(N=11)
+Compiling module work.otpu_skew(N=12)
+Compiling module work.otpu_skew(N=13)
+Compiling module work.otpu_skew(N=14)
+Compiling module work.otpu_skew(N=15)
+Compiling module work.otpu_pe(LAST=1'b1)
+Compiling module work.otpu_skew(W=16,N=17)
+Compiling module work.otpu_colend(SW=22)
+Compiling module work.otpu_skew(W=22,N=0)
+Compiling module work.otpu_delay(W=7,N=20)
+Compiling module work.otpu_delay(N=20)
+Compiling module work.otpu_delay(W=7,N=3)
+Compiling module work.otpu_delay(W=7,N=4)
+Compiling module work.otpu_delay(N=23)
+Compiling module work.otpu_delay(N=0)
+Compiling module work.otpu_fmul
+Compiling module work.otpu_fadd
+Compiling module work.otpu_delay(W=1,N=4)
+Compiling module work.otpu_delay(W=1,N=9)
+Compiling module work.otpu_delay(N=2)
+Compiling module work.otpu_fmadd
+Compiling module work.otpu_delay(W=74,N=6)
+Compiling module work.otpu_delay(W=1,N=5)
+Compiling module work.otpu_mxu(D=64,MCOLS=1,ROWS=8,DEP...
+Compiling module work.tb_opentpu_controlled
+Built simulation snapshot open64

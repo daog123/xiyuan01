@@ -1,0 +1,112 @@
+{
+  "openTPU": {
+    "name": "openTPU",
+    "repository": "FeSens/openTPU",
+    "commit": "810632e2e1d4961575a3c6f8f194abc8fc3f8fd3",
+    "files": [
+      {
+        "local": "LICENSE",
+        "remote": "LICENSE",
+        "sha256": "c95bae1d1ce0235ecccd3560b772ec1efb97f348a79f0fbe0a634f0c2ccefe2c",
+        "git_blob": "57bc88a15a0ee8266c259b2667e64608d3f7e292"
+      },
+      {
+        "local": "rtl/mxu/otpu_mxu.sv",
+        "remote": "rtl/mxu/otpu_mxu.sv",
+        "sha256": "549cf810a49bb9d891eeca116140d3f2c77f65cdd7f9c56cfe38d3acc4b7c598",
+        "git_blob": "384055046eea7a7674d9df2355699f47ac9a7aaa"
+      },
+      {
+        "local": "rtl/tech/generic/otpu_tech_dsp.sv",
+        "remote": "rtl/tech/generic/otpu_tech_dsp.sv",
+        "sha256": "ecafdff412b0d09a29d310f3a8d49a2cc2e6587230d34bb0ea39189d3f862446",
+        "git_blob": "872b454dcf0c07650ceb9b21b34a0079ed1e3ae7"
+      },
+      {
+        "local": "rtl/tech/generic/otpu_tech_ram.sv",
+        "remote": "rtl/tech/generic/otpu_tech_ram.sv",
+        "sha256": "29f9ebd77c7839a5ca5ba7ed2c7fea32bcde61c646b89fa94ecf352a7f86d981",
+        "git_blob": "1dec09caedb512d9de7df3690bf0bcef299efe65"
+      },
+      {
+        "local": "rtl/top/otpu_pkg.sv",
+        "remote": "rtl/top/otpu_pkg.sv",
+        "sha256": "c0ea645315543b7475a165676e176d9a4901bc0c374daa972b830e8bdbb500ac",
+        "git_blob": "3b3a9e1cec16f4dab8ef13f8bb1f74f4631f797b"
+      },
+      {
+        "local": "rtl/vpu/otpu_fp.sv",
+        "remote": "rtl/vpu/otpu_fp.sv",
+        "sha256": "16fc71077a7c7f9c7ef98ee8791c27eee340d6704cbdb0f1852104c64b2bbd48",
+        "git_blob": "e608fa4a21e8028a7c869b0a5b621fb4267a40b9"
+      },
+      {
+        "local": "rtl/vpu/otpu_fpipe.sv",
+        "remote": "rtl/vpu/otpu_fpipe.sv",
+        "sha256": "50d13a22ce78a2e02f9e92a301e6626696dd8adbb88362960dd1385e34634cee",
+        "git_blob": "75e465029c1502f91f5515b1a16c3fe69b082208"
+      }
+    ]
+  },
+  "llama-fpga": {
+    "name": "llama-fpga",
+    "repository": "adamgallas/llama-fpga",
+    "commit": "bdd90206675594ab6b710a32d5319c68a58d9c36",
+    "files": [
+      {
+        "local": "DataPath_xN.v",
+        "remote": "kv260/kv260_vivado/kv260_vivado.srcs/sources_1/imports/EdgeLLM/DataPath_xN.v",
+        "sha256": "3eea5ccf28b79593bd10e48249d08b615f7f2c4493a11d2f6a5de44c2309a537",
+        "git_blob": "fa67339ce2d9442c97d9c8cbc976b63c38d68cea"
+      },
+      {
+        "local": "ip/fp16add6/fp16add6.xci",
+        "remote": "kv260/kv260_vivado/kv260_vivado.srcs/sources_1/ip/fp16add6/fp16add6.xci",
+        "sha256": "875e28610d8bba444c7a3f0e2687f9f29d867c1acd2653be7339240e8c64f2c9",
+        "git_blob": "aaa789d40d850d7dce933bb75b61ab6f445a89e8"
+      },
+      {
+        "local": "ip/fp16mul6/fp16mul6.xci",
+        "remote": "kv260/kv260_vivado/kv260_vivado.srcs/sources_1/ip/fp16mul6/fp16mul6.xci",
+        "sha256": "b49dcfd60add645291f224eb2e0797eea74289b2ade02d5da1f9d562e2fc1a31",
+        "git_blob": "25f505c689bc1a9aacb7a7b1f165db0c29551d0f"
+      },
+      {
+        "local": "ip/fp16mul7s/fp16mul7s.xci",
+        "remote": "kv260/kv260_vivado/kv260_vivado.srcs/sources_1/ip/fp16mul7s/fp16mul7s.xci",
+        "sha256": "95eed05a507056bb9ad603cacf22155cc50d725871a2edcc0d649670c21ac899",
+        "git_blob": "1706ee75e1407068b522521923e29a102e1b185e"
+      },
+      {
+        "local": "ip/fp16toFp32/fp16toFp32.xci",
+        "remote": "kv260/kv260_vivado/kv260_vivado.srcs/sources_1/ip/fp16toFp32/fp16toFp32.xci",
+        "sha256": "f9b8ff3aeadfbdc963b21618b5aea8c5f0d6a34239c5279baa6453eb87fbd767",
+        "git_blob": "5eda3ddb9a85114511a7ca41ea318527efee1335"
+      },
+      {
+        "local": "ip/fp32acc22/fp32acc22.xci",
+        "remote": "kv260/kv260_vivado/kv260_vivado.srcs/sources_1/ip/fp32acc22/fp32acc22.xci",
+        "sha256": "fc373394a277e4a133033f16591340a827757dc3748286e25c3088987127b953",
+        "git_blob": "4a93a7e20911201f40559ad56e75052efb910c1a"
+      },
+      {
+        "local": "ip/fp32add11/fp32add11.xci",
+        "remote": "kv260/kv260_vivado/kv260_vivado.srcs/sources_1/ip/fp32add11/fp32add11.xci",
+        "sha256": "d8329de6c237e2a5bdccee7ef1193c43e226c865120fee9148f5a885cbbe7535",
+        "git_blob": "c08d24a685550b572463099f053d0ff33683de66"
+      },
+      {
+        "local": "ip/fp32mul8/fp32mul8.xci",
+        "remote": "kv260/kv260_vivado/kv260_vivado.srcs/sources_1/ip/fp32mul8/fp32mul8.xci",
+        "sha256": "c06de66c35388f91ef5a2fbddc0b10f852cb12f5a9dbb729b78354c8cfb9a94e",
+        "git_blob": "9e3e96c04fb34fa8e86e7dbe65b3e6c2d6952d1f"
+      },
+      {
+        "local": "ip/fp32toFp16/fp32toFp16.xci",
+        "remote": "kv260/kv260_vivado/kv260_vivado.srcs/sources_1/ip/fp32toFp16/fp32toFp16.xci",
+        "sha256": "4648746c91ce263946c380147cca99dfcc7d209c94ee36a0a10586dd06bf407e",
+        "git_blob": "05178f7e49cce3747686d187a4b89bac2e511166"
+      }
+    ]
+  }
+}

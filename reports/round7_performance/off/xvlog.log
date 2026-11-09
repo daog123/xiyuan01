@@ -1,0 +1,85 @@
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/task_desc_pkg.sv" into library work
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/w4a8_memory_pkg.sv" into library work
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/kv_cache_pkg.sv" into library work
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/accelerator_pkg.sv" into library work
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/attention_pkg.sv" into library work
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/llm_graph_pkg.sv" into library work
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/w4a8_memory_validate.sv" into library work
+INFO: [VRFC 10-311] analyzing module w4a8_memory_validate
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/w4a8_axi_read.sv" into library work
+INFO: [VRFC 10-311] analyzing module w4a8_axi_read
+INFO: [VRFC 10-311] analyzing module w4a8_axi_read_chunk
+INFO: [VRFC 10-311] analyzing module w4a8_axi_read_burst
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/w4a8_axi_write.sv" into library work
+INFO: [VRFC 10-311] analyzing module w4a8_axi_write
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/storage_axi_byte_write.sv" into library work
+INFO: [VRFC 10-311] analyzing module storage_axi_byte_write
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/w4a8_memory_packet.sv" into library work
+INFO: [VRFC 10-311] analyzing module w4a8_memory_packet
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/build/round7_performance/off/bridge_variant.sv" into library work
+INFO: [VRFC 10-311] analyzing module w4a8_memory_bridge
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/sync_sdp_ram.sv" into library work
+INFO: [VRFC 10-311] analyzing module sync_sdp_ram
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/mac_pe.sv" into library work
+INFO: [VRFC 10-311] analyzing module mac_pe
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/mac_array.sv" into library work
+INFO: [VRFC 10-311] analyzing module mac_array
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/systolic_pe.sv" into library work
+INFO: [VRFC 10-311] analyzing module systolic_pe
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/systolic_array.sv" into library work
+INFO: [VRFC 10-311] analyzing module systolic_array
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/w4_unpack.sv" into library work
+INFO: [VRFC 10-311] analyzing module w4_unpack
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/w4a8_wave.sv" into library work
+INFO: [VRFC 10-311] analyzing module w4a8_wave
+INFO: [VRFC 10-311] analyzing module w4a8_compute_array
+INFO: [VRFC 10-311] analyzing module w4a8_packed_pair
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/w4a8_task_adapter.sv" into library work
+INFO: [VRFC 10-311] analyzing module w4a8_task_adapter
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/w4a8_team_top.sv" into library work
+INFO: [VRFC 10-311] analyzing module w4a8_team_top
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/vector/requant_group.sv" into library work
+INFO: [VRFC 10-311] analyzing module requant_group
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/vector/requant_dynamic.sv" into library work
+INFO: [VRFC 10-311] analyzing module requant_dynamic
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/vector/silu_sigmoid_lut.sv" into library work
+INFO: [VRFC 10-311] analyzing module silu_sigmoid_lut
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/vector/swiglu_element.sv" into library work
+INFO: [VRFC 10-311] analyzing module swiglu_element
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/vector/ffn_bridge.sv" into library work
+INFO: [VRFC 10-311] analyzing module ffn_bridge
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/ffn_dma.sv" into library work
+INFO: [VRFC 10-311] analyzing module ffn_dma
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/accelerator_top.sv" into library work
+INFO: [VRFC 10-311] analyzing module accelerator_top
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/kv_cache_address.sv" into library work
+INFO: [VRFC 10-311] analyzing module kv_cache_address
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/kv_cache.sv" into library work
+INFO: [VRFC 10-311] analyzing module kv_cache
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/vector/attention_exp_lut.sv" into library work
+INFO: [VRFC 10-311] analyzing module attention_exp_lut
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/attention_compute.sv" into library work
+INFO: [VRFC 10-311] analyzing module attention_compute
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/attention_q_dma.sv" into library work
+INFO: [VRFC 10-311] analyzing module attention_q_dma
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/attention_kv_top.sv" into library work
+INFO: [VRFC 10-311] analyzing module attention_kv_top
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/llm_top.sv" into library work
+INFO: [VRFC 10-311] analyzing module llm_top
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/llm_graph_top.sv" into library work
+INFO: [VRFC 10-311] analyzing module llm_graph_top
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/tb/llm_test_shells.sv" into library work
+INFO: [VRFC 10-311] analyzing module accelerator_test_shell
+INFO: [VRFC 10-311] analyzing module attention_test_shell
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/tb/system_axi_memory.sv" into library work
+INFO: [VRFC 10-311] analyzing module system_axi_memory
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/tb/tb_accelerator.sv" into library work
+INFO: [VRFC 10-311] analyzing module tb_accelerator
+INFO: [VRFC 10-311] analyzing module tb_accelerator12
+INFO: [VRFC 10-311] analyzing module tb_accelerator32
+INFO: [VRFC 10-311] analyzing module tb_perf_r0
+INFO: [VRFC 10-311] analyzing module tb_perf_r8
+INFO: [VRFC 10-311] analyzing module tb_perf_r24
+INFO: [VRFC 10-311] analyzing module tb_perf_g12
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/tb/tb_round7_linear.sv" into library work
+INFO: [VRFC 10-311] analyzing module tb_round7_linear

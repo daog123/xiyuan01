@@ -3,6 +3,7 @@ w4a8_memory_pkg
 kv_cache_pkg
 accelerator_pkg
 attention_pkg
+llm_graph_pkg
 w4a8_memory_validate
 w4a8_axi_read
 w4a8_axi_write
@@ -29,5 +30,7 @@ kv_cache_address
 kv_cache
 vector/attention_exp_lut
 attention_compute
+attention_q_dma
 attention_kv_top
 llm_top
+llm_graph_top

@@ -1,0 +1,96 @@
+{
+  "status": "PASS",
+  "date": "2026-10-28",
+  "scope": "standalone M1 stream RTL research core; 8x8 products; 8-byte ingress; cold start; group32",
+  "selected": {
+    "M": 1,
+    "N": 64,
+    "K": 2048,
+    "old_cycles": 10615,
+    "new_cycles": 9510,
+    "open_cycles": 9564,
+    "old_beats": 9984,
+    "new_beats": 9488,
+    "old_scale_bytes": 9216,
+    "new_scale_bytes": 8320,
+    "cycle_reduction_percent": 10.409797456429581,
+    "less_than_open_percent": 0.564617314930993
+  },
+  "all_controlled": [
+    {
+      "M": 1,
+      "N": 8,
+      "K": 128,
+      "old_cycles": 138,
+      "new_cycles": 111,
+      "open_cycles": 135,
+      "old_beats": 92,
+      "new_beats": 89,
+      "old_scale_bytes": 72,
+      "new_scale_bytes": 72,
+      "cycle_reduction_percent": 19.565217391304344,
+      "less_than_open_percent": 17.777777777777782
+    },
+    {
+      "M": 1,
+      "N": 8,
+      "K": 512,
+      "old_cycles": 426,
+      "new_cycles": 378,
+      "open_cycles": 408,
+      "old_beats": 368,
+      "new_beats": 356,
+      "old_scale_bytes": 288,
+      "new_scale_bytes": 288,
+      "cycle_reduction_percent": 11.267605633802813,
+      "less_than_open_percent": 7.352941176470584
+    },
+    {
+      "M": 1,
+      "N": 64,
+      "K": 4096,
+      "old_cycles": 21111,
+      "new_cycles": 18998,
+      "open_cycles": 19084,
+      "old_beats": 19968,
+      "new_beats": 18976,
+      "old_scale_bytes": 18432,
+      "new_scale_bytes": 16640,
+      "cycle_reduction_percent": 10.009000047368666,
+      "less_than_open_percent": 0.4506392789771496
+    },
+    {
+      "M": 1,
+      "N": 64,
+      "K": 2048,
+      "old_cycles": 10615,
+      "new_cycles": 9510,
+      "open_cycles": 9564,
+      "old_beats": 9984,
+      "new_beats": 9488,
+      "old_scale_bytes": 9216,
+      "new_scale_bytes": 8320,
+      "cycle_reduction_percent": 10.409797456429581,
+      "less_than_open_percent": 0.564617314930993
+    }
+  ],
+  "resources": {
+    "CLB LUTs": 10511.0,
+    "CLB Registers": 5799.0,
+    "DSPs": 76.0,
+    "Block RAM Tile": 4.0
+  },
+  "WNS_ns": 1.249,
+  "WHS_ns": 0.007,
+  "verification": {
+    "input_cases": 20,
+    "checks": 188128,
+    "stall_checks": 1939,
+    "reset_recoveries": 6,
+    "partial_sums_checked": 27588,
+    "successful_simulations": 55
+  },
+  "core_sha256": "e31d39a54492ce710301e8dcfc5aa5c78eb6024a106bf55f0100c733cc493137",
+  "production_source_unchanged": true,
+  "not_integrated_into_production": true
+}

@@ -1,0 +1,47 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2025.2 (win64) Build 6299465 Fri Nov 14 19:35:11 GMT 2025
+| Date         : Tue Oct 27 17:10:06 2026
+| Host         : LAPTOP-SCQRVP01 running 64-bit major release  (build 9200)
+| Command      : report_drc -file E:/speed-up/experiments/array_bist_20261027/diag_civ/drc.rpt
+| Design       : array_selftest_top
+| Device       : xcvu9p_CIV-flgb2104-2-i
+| Speed File   : -2
+| Design State : Fully Routed
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+Report DRC
+
+Table of Contents
+-----------------
+1. REPORT SUMMARY
+2. REPORT DETAILS
+
+1. REPORT SUMMARY
+-----------------
+            Netlist: array_selftest_top
+          Floorplan: design_1
+      Design limits: <entire design considered>
+           Ruledeck: default
+             Max checks: <unlimited>
+             Checks found: 2
++---------+----------+----------------------------------+--------+
+| Rule    | Severity | Description                      | Checks |
++---------+----------+----------------------------------+--------+
+| SECHK-3 | Advisory | SE Device within Line Rate Limit | 1      |
+| SECHK-4 | Advisory | SE Device within IO Count Limit  | 1      |
++---------+----------+----------------------------------+--------+
+
+2. REPORT DETAILS
+-----------------
+SECHK-3#1 Advisory
+SE Device within Line Rate Limit  
+The part xcvu9p_CIV is limited to a total GT Line Rate of less than 500.00 Gbps. The current combined GT Line Rate is calculated to be 0.00, which is within the allowed limit.
+Related violations: <none>
+
+SECHK-4#1 Advisory
+SE Device within IO Count Limit  
+The part xcvu9p_CIV-flgb2104-2-i is limited to a total of 700 I/Os contained within the PSS, HR, HP, and HD I/O Banks. The current use is 0, which is within the allowed limit.
+Related violations: <none>
+
+

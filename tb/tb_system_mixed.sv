@@ -17,8 +17,8 @@ module tb_system_mixed;
     logic [7:0] arlen,awlen,wstrb;logic [2:0] arsize,awsize;logic [1:0] arburst,awburst,rresp,bresp;
     logic setup=0,hold_b=0,hold_r=0,inject_r=0,inject_b=0;
     integer reads,writes,b_count,checks=0,tasks=0,expected_id;
-    llm_top #(.GROUP_SIZE(4),.ROWS(2),.COLS(2),.TILE_K(3),.MAX_M(4),.MAX_N(4),.MAX_K(64),
-        .MAX_H(8),.CAPACITY(16),.MAX_DIM(8),.MAX_TOKENS(4)) dut(.*);
+    llm_graph_top #(.GROUP_SIZE(4),.ROWS(2),.COLS(2),.TILE_K(3),.MAX_M(4),.MAX_N(4),.MAX_K(64),
+        .MAX_H(8),.CAPACITY(16),.MAX_DIM(8),.MAX_TOKENS(4)) dut(.qkv_plan('0),.*);
     system_axi_memory #(.BASE(BASE)) memory(.*);
     task automatic require(input bit c,input string m);
         checks++;if(!c)$fatal(1,"MIXED_CHECK_FAILED %s time=%0t",m,$time);

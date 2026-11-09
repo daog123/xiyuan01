@@ -1,0 +1,43 @@
+
+****** xsim v2025.2 (64-bit)
+  **** SW Build 6299465 on Fri Nov 14 19:35:11 GMT 2025
+  **** IP Build 6300035 on Fri Nov 14 10:48:45 MST 2025
+  **** SharedData Build 6298862 on Thu Nov 13 04:50:51 MST 2025
+  **** Start of session at: Wed Oct 28 20:20:15 2026
+    ** Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+    ** Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+
+source xsim.dir/ownsim/xsim_script.tcl
+# xsim {ownsim} -autoloadwcfg -tclbatch {E:/speed-up/scripts/run_xsim.tcl}
+Time resolution is 1 ps
+source E:/speed-up/scripts/run_xsim.tcl
+## run 20 ms
+W4A8_WAVE_CASE_PASS id=0 recovery=0 mode=0 dims=3x5x19 cycles=98 mac=285 overlap=0
+W4A8_WAVE_CASE_PASS id=1 recovery=0 mode=0 dims=2x4x41 cycles=75 mac=328 overlap=8
+W4A8_WAVE_CASE_PASS id=2 recovery=0 mode=0 dims=1x4x73 cycles=65 mac=292 overlap=8
+W4A8_WAVE_CASE_PASS id=3 recovery=0 mode=0 dims=5x7x37 cycles=246 mac=1295 overlap=11
+W4A8_WAVE_CASE_PASS id=4 recovery=0 mode=0 dims=1x13x96 cycles=171 mac=1248 overlap=16
+W4A8_WAVE_CASE_PASS id=5 recovery=0 mode=0 dims=4x12x96 cycles=385 mac=4608 overlap=48
+W4A8_WAVE_CASE_PASS id=6 recovery=0 mode=0 dims=1x1x1 cycles=20 mac=1 overlap=0
+W4A8_WAVE_CASE_PASS id=7 recovery=0 mode=0 dims=1x1x1 cycles=20 mac=1 overlap=0
+W4A8_WAVE_CASE_PASS id=8 recovery=0 mode=0 dims=1x1x40 cycles=35 mac=40 overlap=2
+W4A8_WAVE_CASE_PASS id=9 recovery=0 mode=0 dims=1x1x40 cycles=35 mac=40 overlap=2
+W4A8_WAVE_CASE_PASS id=10 recovery=0 mode=0 dims=3x9x65 cycles=264 mac=1755 overlap=26
+W4A8_WAVE_CASE_PASS id=11 recovery=0 mode=0 dims=5x7x37 cycles=246 mac=1295 overlap=11
+W4A8_WAVE_CASE_PASS id=12 recovery=0 mode=0 dims=8x16x96 cycles=866 mac=12288 overlap=100
+W4A8_WAVE_CASE_PASS id=13 recovery=0 mode=0 dims=1x17x96 cycles=221 mac=1632 overlap=24
+W4A8_WAVE_CASE_PASS id=14 recovery=0 mode=0 dims=9x11x67 cycles=799 mac=6633 overlap=63
+W4A8_WAVE_CASE_PASS id=15 recovery=0 mode=0 dims=1x8x128 cycles=138 mac=1024 overlap=12
+W4A8_WAVE_CASE_PASS id=16 recovery=0 mode=0 dims=1x8x512 cycles=426 mac=4096 overlap=60
+W4A8_WAVE_CASE_PASS id=17 recovery=0 mode=0 dims=8x8x128 cycles=514 mac=8192 overlap=96
+W4A8_WAVE_CASE_PASS id=18 recovery=0 mode=0 dims=8x8x512 cycles=1210 mac=32768 overlap=480
+W4A8_WAVE_CASE_PASS id=19 recovery=0 mode=0 dims=1x64x4096 cycles=21111 mac=262144 overlap=4064
+W4A8_WAVE_CASE_PASS id=20 recovery=0 mode=0 dims=8x64x4096 cycles=61326 mac=2097152 overlap=20066
+W4A8_WAVE_CASE_PASS id=21 recovery=0 mode=0 dims=1x64x2048 cycles=10615 mac=131072 overlap=2016
+W4A8_WAVE_CASE_PASS id=22 recovery=0 mode=0 dims=8x64x2048 cycles=31630 mac=1048576 overlap=9954
+W4A8_WAVE_TESTS_PASS rows=8 cols=8 tile=32 group=32 db=1 tasks=23 outputs=1729 psums=113217 checks=27695976 overlap=37067 held_inputs=0 bytes=8 scale_once=1 pack=1 dual_writes=50322 holey_keeps=26 odd_k=0 post_overlap=1 pipeline=1 scaled=113217 full_queue=0 held_pipe=0 post_resets=0 a_reuse=1 cache_hits=351080 cache_writes=8001 cache_switches=2 systolic=1 held_array=0 drain_checks=21977 array_resets=0 group_stream=1 shadow_checks=8306752 seam_holds=0 reclaimed_writes=0 seam_resets=0 seam_resumes=0
+$finish called at time : 1305710 ns : File "C:/Users/Lenovo/Documents/ChatGPT/��Դ��Ŀ/.round8_core_work/current/testbench.sv" Line 536
+run: Time (s): cpu = 00:00:00 ; elapsed = 00:00:31 . Memory (MB): peak = 224.656 ; gain = 0.000
+## quit
+INFO: xsimkernel Simulation Memory Usage: 31356 KB (Peak: 31356 KB), Simulation CPU Usage: 30796 ms
+INFO: [Common 17-206] Exiting xsim at Wed Oct 28 20:20:49 2026...

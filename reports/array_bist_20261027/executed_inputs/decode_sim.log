@@ -1,0 +1,66 @@
+[
+  {
+    "start": 13010.0,
+    "unit": 80.0,
+    "word": "c64a12081f410182",
+    "status": 2,
+    "cases": 8,
+    "checksum": 8001,
+    "errors": 1
+  },
+  {
+    "start": 24850.0,
+    "unit": 80.0,
+    "word": "c64a11081f410023",
+    "status": 1,
+    "cases": 8,
+    "checksum": 8001,
+    "errors": 0
+  },
+  {
+    "start": 36690.0,
+    "unit": 80.0,
+    "word": "c64a12081f410182",
+    "status": 2,
+    "cases": 8,
+    "checksum": 8001,
+    "errors": 1
+  },
+  {
+    "start": 48530.0,
+    "unit": 80.0,
+    "word": "c64a11081f410023",
+    "status": 1,
+    "cases": 8,
+    "checksum": 8001,
+    "errors": 0
+  },
+  {
+    "start": 60370.0,
+    "unit": 80.0,
+    "word": "c64a12081f410182",
+    "status": 2,
+    "cases": 8,
+    "checksum": 8001,
+    "errors": 1
+  },
+  {
+    "start": 72210.0,
+    "unit": 80.0,
+    "word": "c64a11081f410023",
+    "status": 1,
+    "cases": 8,
+    "checksum": 8001,
+    "errors": 0
+  },
+  {
+    "start": 84050.0,
+    "unit": 80.0,
+    "word": "c64a12081f410182",
+    "status": 2,
+    "cases": 8,
+    "checksum": 8001,
+    "errors": 1
+  }
+]
+DONE_TELEMETRY_DECODE_PASS frames=3

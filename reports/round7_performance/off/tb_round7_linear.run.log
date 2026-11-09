@@ -1,0 +1,28 @@
+
+****** xsim v2025.2 (64-bit)
+  **** SW Build 6299465 on Fri Nov 14 19:35:11 GMT 2025
+  **** IP Build 6300035 on Fri Nov 14 10:48:45 MST 2025
+  **** SharedData Build 6298862 on Thu Nov 13 04:50:51 MST 2025
+  **** Start of session at: Mon Oct 26 22:18:55 2026
+    ** Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+    ** Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+
+source xsim.dir/tb_round7_linear/xsim_script.tcl
+# xsim {tb_round7_linear} -autoloadwcfg -tclbatch {E:/speed-up/scripts/run_w4a8_memory_xsim.tcl}
+Time resolution is 1 ps
+source E:/speed-up/scripts/run_w4a8_memory_xsim.tcl
+## run all
+LARGE_RECORD case=0 M=1 N=64 K=512 cycles=62800 reads=4624 read_beats=4672 burst_reads=16 read_payload=19456 writes=64 acks=64 wait_r=41616 wait_ar=0 bytes=262144 w_ar=4096 a_ar=16 sx_ar=256 sw_ar=256 w_bytes=16384 a_bytes=512 sx_bytes=512 sw_bytes=2048
+LARGE_RECORD case=1 M=2 N=64 K=512 cycles=65931 reads=4896 read_beats=4992 burst_reads=32 read_payload=20480 writes=128 acks=128 wait_r=44064 wait_ar=0 bytes=262144 w_ar=4096 a_ar=32 sx_ar=512 sw_ar=256 w_bytes=16384 a_bytes=1024 sx_bytes=1024 sw_bytes=2048
+LARGE_RECORD case=2 M=4 N=64 K=512 cycles=72199 reads=5440 read_beats=5632 burst_reads=64 read_payload=22528 writes=256 acks=256 wait_r=48960 wait_ar=0 bytes=262144 w_ar=4096 a_ar=64 sx_ar=1024 sw_ar=256 w_bytes=16384 a_bytes=2048 sx_bytes=2048 sw_bytes=2048
+LARGE_RECORD case=3 M=8 N=64 K=512 cycles=144380 reads=10880 read_beats=11264 burst_reads=128 read_payload=45056 writes=512 acks=512 wait_r=97920 wait_ar=0 bytes=262144 w_ar=8192 a_ar=128 sx_ar=2048 sw_ar=512 w_bytes=32768 a_bytes=4096 sx_bytes=4096 sw_bytes=4096
+LARGE_RECORD case=4 M=1 N=64 K=4096 cycles=501952 reads=36992 read_beats=37376 burst_reads=128 read_payload=155648 writes=64 acks=64 wait_r=332928 wait_ar=0 bytes=262144 w_ar=32768 a_ar=128 sx_ar=2048 sw_ar=2048 w_bytes=131072 a_bytes=4096 sx_bytes=4096 sw_bytes=16384
+LARGE_RECORD case=5 M=2 N=64 K=4096 cycles=526699 reads=39168 read_beats=39936 burst_reads=256 read_payload=163840 writes=128 acks=128 wait_r=352512 wait_ar=0 bytes=262144 w_ar=32768 a_ar=256 sx_ar=4096 sw_ar=2048 w_bytes=131072 a_bytes=8192 sx_bytes=8192 sw_bytes=16384
+LARGE_RECORD case=6 M=4 N=64 K=4096 cycles=576199 reads=43520 read_beats=45056 burst_reads=512 read_payload=180224 writes=256 acks=256 wait_r=391680 wait_ar=0 bytes=262144 w_ar=32768 a_ar=512 sx_ar=8192 sw_ar=2048 w_bytes=131072 a_bytes=16384 sx_bytes=16384 sw_bytes=16384
+LARGE_RECORD case=7 M=8 N=64 K=4096 cycles=1152380 reads=87040 read_beats=90112 burst_reads=1024 read_payload=360448 writes=512 acks=512 wait_r=783360 wait_ar=0 bytes=262144 w_ar=65536 a_ar=1024 sx_ar=16384 sw_ar=4096 w_bytes=262144 a_bytes=32768 sx_bytes=32768 sw_bytes=32768
+ROUND7_LARGE_PASS tasks=8 bytes=2097152 checks=5432332
+$finish called at time : 31026160 ns : File "E:/speed-up/tb/tb_round7_linear.sv" Line 69
+run: Time (s): cpu = 00:00:00 ; elapsed = 00:02:05 . Memory (MB): peak = 221.211 ; gain = 0.000
+## quit
+INFO: xsimkernel Simulation Memory Usage: 17072 KB (Peak: 17072 KB), Simulation CPU Usage: 119655 ms
+INFO: [Common 17-206] Exiting xsim at Mon Oct 26 22:21:02 2026...

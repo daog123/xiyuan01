@@ -1,0 +1,54 @@
+{
+  "status": "PASS",
+  "mode": "array",
+  "physical_capture": true,
+  "accepted_frames": 5,
+  "frames": [
+    {
+      "start": 3.253513715,
+      "unit": 0.04334750733517773,
+      "word": "c64a11081f410023",
+      "status": 1,
+      "cases": 8,
+      "checksum": 8001,
+      "errors": 0
+    },
+    {
+      "start": 9.669414975,
+      "unit": 0.043349170417700866,
+      "word": "c64a12081f410182",
+      "status": 2,
+      "cases": 8,
+      "checksum": 8001,
+      "errors": 1
+    },
+    {
+      "start": 16.0842747,
+      "unit": 0.04335265398516092,
+      "word": "c64a11081f410023",
+      "status": 1,
+      "cases": 8,
+      "checksum": 8001,
+      "errors": 0
+    },
+    {
+      "start": 22.500638342,
+      "unit": 0.04333930065509307,
+      "word": "c64a12081f410182",
+      "status": 2,
+      "cases": 8,
+      "checksum": 8001,
+      "errors": 1
+    },
+    {
+      "start": 28.913980821,
+      "unit": 0.04334572448286924,
+      "word": "c64a11081f410023",
+      "status": 1,
+      "cases": 8,
+      "checksum": 8001,
+      "errors": 0
+    }
+  ],
+  "self_rtl_on_fpga": true
+}

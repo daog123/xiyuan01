@@ -1,0 +1,10 @@
+{
+  "source_sha256": "31ac71f70c033dbb2b4a4205ee5441808287d991a607d4a551115ff97ba97efc",
+  "normalized_sha256": "7c46526e3977d296056aa08b56d6b1d92430a1438dafeb59bc5050d43116e52d",
+  "old_payload_offset": 142,
+  "new_payload_offset": 128,
+  "payload_sha256": "ef6ff60fe7b0e750c1a7b5d2c997cc667aa16d962bf1085cce3908df10ba55d0",
+  "payload_unchanged": true,
+  "bytes": 80159236,
+  "design_field": "array_selftest_top__;UserID=0XFFFFFFFF;Version=2025.2"
+}

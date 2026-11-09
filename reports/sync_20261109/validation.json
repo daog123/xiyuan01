@@ -1,0 +1,20 @@
+{
+  "status": "PASS",
+  "sync_date": "2026-11-09",
+  "python_syntax_files": 92,
+  "json_errors": 0,
+  "sensitive_pattern_findings": 0,
+  "oversized_files": 0,
+  "production_files_byte_identical": 140,
+  "software_tests": 36,
+  "software_tests_status": "PASS",
+  "original_current_source_audit": "PROJECT_CURRENT_SOURCE_EVIDENCE_PASS",
+  "archived_board_samples": 72184,
+  "normal_crc_frames": 3,
+  "negative_crc_frames": 2,
+  "compressed_board_image_and_historical_source_identity": "PASS",
+  "frozen_r6_inputs_restored": 7,
+  "new_hardware_run": false,
+  "full_rtl_regression_repeated": false,
+  "validation_scope": "Software tests, original source evidence audit, syntax/JSON/link checks, offline physical-sample replay and image/source hashes; historical RTL and physical reports preserved"
+}

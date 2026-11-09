@@ -1,0 +1,87 @@
+#-----------------------------------------------------------
+# xsim v2025.2 (64-bit)
+# SW Build 6299465 on Fri Nov 14 19:35:11 GMT 2025
+# IP Build 6300035 on Fri Nov 14 10:48:45 MST 2025
+# SharedData Build 6298862 on Thu Nov 13 04:50:51 MST 2025
+# Start of session at: Wed Oct 28 20:30:36 2026
+# Process ID         : 27088
+# Current directory  : C:/Users/Lenovo/Documents/ChatGPT/曦源项目/.round8_core_work/stream
+# Command line       : xsim.exe -mode tcl -source {xsim.dir/streamsim/xsim_script.tcl}
+# Log file           : C:/Users/Lenovo/Documents/ChatGPT/曦源项目/.round8_core_work/stream/xsim.log
+# Journal file       : C:/Users/Lenovo/Documents/ChatGPT/曦源项目/.round8_core_work/stream\xsim.jou
+# Running On         : LAPTOP-SCQRVP01
+# Platform           : Windows Server 2016 or Windows 10
+# Operating System   : 26200
+# Processor Detail   : Intel(R) Core(TM) i7-14650HX
+# CPU Frequency      : 2419 MHz
+# CPU Physical cores : 16
+# CPU Logical cores  : 24
+# Host memory        : 16873 MB
+# Swap memory        : 16106 MB
+# Total Virtual      : 32979 MB
+# Available Virtual  : 11783 MB
+#-----------------------------------------------------------
+source xsim.dir/streamsim/xsim_script.tcl
+# xsim {streamsim} -autoloadwcfg -tclbatch {E:/speed-up/scripts/run_xsim.tcl}
+Time resolution is 1 ps
+source E:/speed-up/scripts/run_xsim.tcl
+## run 20 ms
+STREAM_CASE_PASS id=0 mode=0 recovery=0 N=8 K=128 cycles=111 beats=89
+STREAM_CASE_PASS id=0 mode=1 recovery=0 N=8 K=128 cycles=175 beats=89
+STREAM_CASE_PASS id=0 mode=2 recovery=0 N=8 K=128 cycles=213 beats=89
+STREAM_CASE_PASS id=1 mode=0 recovery=0 N=8 K=512 cycles=378 beats=356
+STREAM_CASE_PASS id=2 mode=0 recovery=0 N=64 K=4096 cycles=18998 beats=18976
+STREAM_CASE_PASS id=3 mode=0 recovery=0 N=64 K=2048 cycles=9510 beats=9488
+STREAM_CASE_PASS id=4 mode=0 recovery=0 N=1 K=1 cycles=13 beats=4
+STREAM_CASE_PASS id=4 mode=1 recovery=0 N=1 K=1 cycles=19 beats=4
+STREAM_CASE_PASS id=4 mode=2 recovery=0 N=1 K=1 cycles=28 beats=4
+STREAM_CASE_PASS id=5 mode=0 recovery=0 N=3 K=3 cycles=16 beats=4
+STREAM_CASE_PASS id=5 mode=1 recovery=0 N=3 K=3 cycles=21 beats=4
+STREAM_CASE_PASS id=5 mode=2 recovery=0 N=3 K=3 cycles=16 beats=4
+STREAM_CASE_PASS id=6 mode=0 recovery=0 N=7 K=7 cycles=26 beats=8
+STREAM_CASE_PASS id=6 mode=1 recovery=0 N=7 K=7 cycles=36 beats=8
+STREAM_CASE_PASS id=6 mode=2 recovery=0 N=7 K=7 cycles=41 beats=8
+STREAM_CASE_PASS id=7 mode=0 recovery=0 N=8 K=8 cycles=27 beats=8
+STREAM_CASE_PASS id=7 mode=1 recovery=0 N=8 K=8 cycles=40 beats=8
+STREAM_CASE_PASS id=7 mode=2 recovery=0 N=8 K=8 cycles=38 beats=8
+STREAM_CASE_PASS id=8 mode=0 recovery=0 N=9 K=31 cycles=57 beats=26
+STREAM_CASE_PASS id=8 mode=1 recovery=0 N=9 K=31 cycles=80 beats=26
+STREAM_CASE_PASS id=8 mode=2 recovery=0 N=9 K=31 cycles=105 beats=26
+STREAM_CASE_PASS id=9 mode=0 recovery=0 N=17 K=32 cycles=79 beats=44
+STREAM_CASE_PASS id=9 mode=1 recovery=0 N=17 K=32 cycles=109 beats=44
+STREAM_CASE_PASS id=9 mode=2 recovery=0 N=17 K=32 cycles=148 beats=44
+STREAM_CASE_PASS id=10 mode=0 recovery=0 N=63 K=33 cycles=287 beats=172
+STREAM_CASE_PASS id=10 mode=1 recovery=0 N=63 K=33 cycles=398 beats=172
+STREAM_CASE_PASS id=10 mode=2 recovery=0 N=63 K=33 cycles=440 beats=172
+STREAM_CASE_PASS id=11 mode=0 recovery=0 N=64 K=63 cycles=319 beats=297
+STREAM_CASE_PASS id=11 mode=1 recovery=0 N=64 K=63 cycles=524 beats=297
+STREAM_CASE_PASS id=11 mode=2 recovery=0 N=64 K=63 cycles=596 beats=297
+STREAM_CASE_PASS id=12 mode=0 recovery=0 N=17 K=65 cycles=160 beats=96
+STREAM_CASE_PASS id=12 mode=1 recovery=0 N=17 K=65 cycles=231 beats=96
+STREAM_CASE_PASS id=12 mode=2 recovery=0 N=17 K=65 cycles=257 beats=96
+STREAM_CASE_PASS id=12 mode=0 recovery=1 N=17 K=65 cycles=160 beats=96
+STREAM_CASE_PASS id=12 mode=0 recovery=2 N=17 K=65 cycles=160 beats=96
+STREAM_CASE_PASS id=12 mode=0 recovery=3 N=17 K=65 cycles=160 beats=96
+STREAM_CASE_PASS id=13 mode=0 recovery=0 N=8 K=128 cycles=111 beats=89
+STREAM_CASE_PASS id=13 mode=1 recovery=0 N=8 K=128 cycles=180 beats=89
+STREAM_CASE_PASS id=13 mode=2 recovery=0 N=8 K=128 cycles=206 beats=89
+STREAM_CASE_PASS id=14 mode=0 recovery=0 N=64 K=512 cycles=2394 beats=2372
+STREAM_CASE_PASS id=15 mode=0 recovery=0 N=64 K=2048 cycles=9510 beats=9488
+STREAM_CASE_PASS id=16 mode=0 recovery=0 N=64 K=4096 cycles=18998 beats=18976
+STREAM_CASE_PASS id=17 mode=0 recovery=0 N=9 K=37 cycles=77 beats=34
+STREAM_CASE_PASS id=17 mode=1 recovery=0 N=9 K=37 cycles=110 beats=34
+STREAM_CASE_PASS id=17 mode=2 recovery=0 N=9 K=37 cycles=113 beats=34
+STREAM_CASE_PASS id=18 mode=0 recovery=0 N=9 K=37 cycles=77 beats=34
+STREAM_CASE_PASS id=18 mode=1 recovery=0 N=9 K=37 cycles=105 beats=34
+STREAM_CASE_PASS id=18 mode=2 recovery=0 N=9 K=37 cycles=125 beats=34
+STREAM_CASE_PASS id=19 mode=0 recovery=0 N=17 K=65 cycles=160 beats=96
+STREAM_CASE_PASS id=19 mode=1 recovery=0 N=17 K=65 cycles=229 beats=96
+STREAM_CASE_PASS id=19 mode=2 recovery=0 N=17 K=65 cycles=266 beats=96
+STREAM_CASE_PASS id=19 mode=0 recovery=1 N=17 K=65 cycles=160 beats=96
+STREAM_CASE_PASS id=19 mode=0 recovery=2 N=17 K=65 cycles=160 beats=96
+STREAM_CASE_PASS id=19 mode=0 recovery=3 N=17 K=65 cycles=160 beats=96
+STREAM_CASE_PASS id=19 mode=0 recovery=4 N=17 K=65 cycles=160 beats=96
+STREAM_TESTS_PASS cases=20 checks=188128 held=1939 recoveries=6 partials=27588
+$finish called at time : 675550 ns : File "C:/Users/Lenovo/Documents/ChatGPT/曦源项目/.round8_core_work/tb_stream.sv" Line 118
+## quit
+INFO: [Common 17-206] Exiting xsim at Wed Oct 28 20:30:39 2026...

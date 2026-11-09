@@ -1,0 +1,21 @@
+Vivado Simulator v2025.2
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+Running: E:/AMDDesignTools/2025.2/Vivado/bin/unwrapped/win64.o/xelab.exe tb_memory_round7_context -s sim -timescale 1ns/1ps 
+Multi-threading is on. Using 22 slave threads.
+Starting static elaboration
+Pass Through NonSizing Optimizer
+Completed static elaboration
+Starting simulation data flow analysis
+Completed simulation data flow analysis
+Time Resolution for simulation is 1ps
+Compiling package work.w4a8_memory_pkg
+Compiling module work.w4a8_memory_validate
+Compiling module work.w4a8_memory_packet(TILE_K=32)
+Compiling module work.w4a8_axi_read_burst(ADDR_WIDTH=3...
+Compiling module work.w4a8_axi_write
+Compiling module work.w4a8_memory_bridge(TILE_K=32)
+Compiling module work.w4a8_axi_memory
+Compiling module work.tb_w4a8_memory(TILE_K=32,REAL_CO...
+Compiling module work.tb_memory_round7_context
+Built simulation snapshot sim

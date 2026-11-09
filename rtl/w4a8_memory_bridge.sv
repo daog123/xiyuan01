@@ -1,7 +1,7 @@
 // Storage-side adapter only. Connect core_reset OR system reset to w4a8_wave.
 module w4a8_memory_bridge #(
     parameter integer ADDR_WIDTH=32,ROWS=4,COLS=4,TILE_K=8,GROUP_SIZE=32,
-    parameter integer MAX_M=64,MAX_N=64,MAX_K=4096
+    parameter integer MAX_M=64,MAX_N=64,MAX_K=4096,BURST_READ=1,WEIGHT_CACHE=1,SX_CACHE=1
 )(
     input logic clk,rst,
     input logic task_valid,output logic task_ready,input w4a8_memory_pkg::memory_task_t task_desc,
@@ -41,7 +41,7 @@ module w4a8_memory_bridge #(
     logic legal,packet_fault,read_fault,packet_idle,rd_idle,wr_idle;
     logic rd_valid,rd_ready,rsp_valid,rsp_ready,rsp_error;
     logic [ADDR_WIDTH-1:0] rd_addr;
-    logic [7:0] rsp_data;
+    logic [63:0] rsp_data;logic [3:0] rd_bytes,rsp_bytes;logic [15:0] rd_span;
     logic ack_valid,ack_error,wr_cmd_valid,wr_cmd_ready;
     logic done_seen,last_seen;
     logic [31:0] outputs,acks;
@@ -63,16 +63,16 @@ module w4a8_memory_bridge #(
     assign out_ready=state==RUN && wr_cmd_ready && !rst;
     assign wr_cmd_valid=state==RUN && out_valid && output_legal && !rst;
     w4a8_memory_validate #(.ADDR_WIDTH(ADDR_WIDTH),.GROUP_SIZE(GROUP_SIZE),.MAX_M(MAX_M),.MAX_N(MAX_N),.MAX_K(MAX_K)) validate(.desc(desc),.legal(legal));
-    w4a8_memory_packet #(.ADDR_WIDTH(ADDR_WIDTH),.ROWS(ROWS),.COLS(COLS),.TILE_K(TILE_K),.GROUP_SIZE(GROUP_SIZE)) packet(
+    w4a8_memory_packet #(.ADDR_WIDTH(ADDR_WIDTH),.ROWS(ROWS),.COLS(COLS),.TILE_K(TILE_K),.GROUP_SIZE(GROUP_SIZE),.BURST_READ(BURST_READ),.WEIGHT_CACHE(WEIGHT_CACHE),.SX_CACHE(SX_CACHE)) packet(
         .clk(clk),.rst(local_reset),.enable(state==RUN),.abort_task(abort_task),.desc(desc),
         .req_valid(req_valid),.req_ready(req_ready),.req_m(req_m),.req_n(req_n),.req_k(req_k),
         .req_ml(req_ml),.req_nl(req_nl),.req_kl(req_kl),.req_group(req_group),
         .req_scale(req_scale),.req_activation(req_activation),
         .in_valid(in_valid),.in_ready(in_ready),.in_data(in_data),.in_keep(in_keep),
         .fault(packet_fault),.idle(packet_idle),.read_fault(read_fault),.buffer_used(buffer_used),
-        .rd_valid(rd_valid),.rd_ready(rd_ready),.rd_addr(rd_addr),.rsp_valid(rsp_valid),
+        .rd_valid(rd_valid),.rd_ready(rd_ready),.rd_addr(rd_addr),.rd_bytes(rd_bytes),.rd_span(rd_span),.rsp_bytes(rsp_bytes),.rsp_valid(rsp_valid),
         .rsp_ready(rsp_ready),.rsp_data(rsp_data),.rsp_error(rsp_error));
-    w4a8_axi_read #(.ADDR_WIDTH(ADDR_WIDTH)) reader(.clk(clk),.rst(local_reset),.cmd_valid(rd_valid),.cmd_ready(rd_ready),.cmd_addr(rd_addr),
+    w4a8_axi_read_burst #(.ADDR_WIDTH(ADDR_WIDTH)) reader(.clk(clk),.rst(local_reset),.cmd_valid(rd_valid),.cmd_ready(rd_ready),.cmd_addr(rd_addr),.cmd_bytes(rd_bytes),.cmd_span(rd_span),.rsp_bytes(rsp_bytes),
         .rsp_valid(rsp_valid),.rsp_ready(rsp_ready),.rsp_data(rsp_data),.rsp_error(rsp_error),.idle(rd_idle),
         .arvalid(arvalid),.arready(arready),.araddr(araddr),.arid(arid),.arlen(arlen),.arsize(arsize),.arburst(arburst),
         .rvalid(rvalid),.rready(rready),.rdata(rdata),.rid(rid),.rresp(rresp),.rlast(rlast));
@@ -89,7 +89,7 @@ module w4a8_memory_bridge #(
             packet_high_water<=0;write_high_water<=0;
         end else begin
             if(state!=IDLE && state!=COMPLETE) cycles<=cycles+1;
-            if(arvalid && arready) begin read_bytes<=read_bytes+1;read_bus_bytes<=read_bus_bytes+8;end
+            if(arvalid && arready) begin read_bytes<=read_bytes+((32'd1<<arsize)*(32'(arlen)+1));read_bus_bytes<=read_bus_bytes+8*(32'(arlen)+1);end
             if(wvalid && wready) begin write_bytes<=write_bytes+4;write_bus_bytes<=write_bus_bytes+8;end
             if(!rd_idle) read_wait<=read_wait+1;
             if(!wr_idle) begin write_wait<=write_wait+1;write_high_water<=1;end

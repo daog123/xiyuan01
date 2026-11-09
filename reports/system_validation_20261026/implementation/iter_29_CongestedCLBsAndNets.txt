@@ -1,0 +1,13 @@
+List of CLB Tiles
+CLEM_X17Y831
+CLEL_R_X17Y831
+CLEM_X47Y865
+CLEL_R_X47Y865
+CLEM_X30Y836
+CLEL_R_X30Y836
+CLEM_X21Y826
+CLEL_R_X21Y826
+
+List of Congested Nets
+linear_ffn/saved_linear_reg[desc][m_n_0_][10]
+

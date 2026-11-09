@@ -22,7 +22,7 @@ module attention_kv_top #(parameter integer ADDR_WIDTH=64,GROUP_SIZE=32,
     input logic bvalid,output logic bready,input logic [3:0] bid,input logic [1:0] bresp
 );
     import task_desc_pkg::*;import kv_cache_pkg::*;
-    typedef enum logic [2:0] {IDLE,EXTERNAL,CHECK,START,QUERY,DRAIN,COMPLETE} state_t;
+    typedef enum logic [2:0] {IDLE,EXTERNAL,CHECK,QLOAD,START,QUERY,DRAIN,COMPLETE} state_t;
     state_t state;
     kv_config_t saved_cfg,candidate;
     attention_pkg::attention_task_t active;
@@ -49,6 +49,34 @@ module attention_kv_top #(parameter integer ADDR_WIDTH=64,GROUP_SIZE=32,
     wire bad_region=active.y_addr[1:0]!=0 || active.y_bytes<4*32'(active.dimension) ||
         65'(active.y_addr)+65'(active.y_bytes)>(65'd1<<ADDR_WIDTH) || active.y_bytes==0;
     logic aliases;
+    logic core_q_ready,dma_q_valid,dma_q_last,dma_loaded,dma_failed,dma_idle;
+    logic signed [7:0] dma_q_data;logic [15:0] dma_q_scale;
+    wire memory_q=active.q_source!=0;
+    wire q_owner=state==QLOAD;
+    wire bad_q_flags=active.q_source>2 || (active.q_source==0 &&
+        (active.q_addr!=0 || active.qs_addr!=0 || active.q_bytes!=0 || active.qs_bytes!=0));
+    wire bad_shape=!metadata_valid || active.tokens==0 || active.tokens>committed || active.tokens>MAX_TOKENS ||
+        active.dimension==0 || active.dimension>MAX_DIM || active.dimension!=saved_cfg.dimension || active.score_scale==0;
+    wire bad_q_region=memory_q && (active.q_bytes<(active.q_source==2?4:1)*32'(active.dimension) || active.q_bytes==0 ||
+        65'(active.q_addr)+65'(active.q_bytes)>(65'd1<<ADDR_WIDTH) ||
+        w4a8_memory_pkg::overlaps(active.y_addr,active.y_bytes,active.q_addr,active.q_bytes) ||
+        (active.q_source==2 && (active.q_addr[1:0]!=0 || active.qs_addr!=0 || active.qs_bytes!=0)) ||
+        (active.q_source==1 && (active.qs_bytes<2*((32'(active.dimension)+GROUP_SIZE-1)/GROUP_SIZE) || active.qs_bytes==0 ||
+            65'(active.qs_addr)+65'(active.qs_bytes)>(65'd1<<ADDR_WIDTH) ||
+            w4a8_memory_pkg::overlaps(active.q_addr,active.q_bytes,active.qs_addr,active.qs_bytes) ||
+            w4a8_memory_pkg::overlaps(active.y_addr,active.y_bytes,active.qs_addr,active.qs_bytes))));
+    assign q_ready=state==QUERY && !memory_q && core_q_ready;
+    wire arvalid_k,arvalid_q,rready_k,rready_q;
+    wire [ADDR_WIDTH-1:0] araddr_k,araddr_q;
+    wire [3:0] arid_k,arid_q;wire [7:0] arlen_k,arlen_q;
+    wire [2:0] arsize_k,arsize_q;wire [1:0] arburst_k,arburst_q;
+    assign arvalid=q_owner?arvalid_q:arvalid_k;
+    assign araddr=q_owner?araddr_q:araddr_k;
+    assign arid=q_owner?arid_q:arid_k;
+    assign arlen=q_owner?arlen_q:arlen_k;
+    assign arsize=q_owner?arsize_q:arsize_k;
+    assign arburst=q_owner?arburst_q:arburst_k;
+    assign rready=q_owner?rready_q:rready_k;
     always_comb begin
         aliases=0;
         for(integer p=0;p<4;p++) if(w4a8_memory_pkg::overlaps(active.y_addr,active.y_bytes,saved_cfg.base[p],saved_cfg.bytes[p])) aliases=1;
@@ -71,8 +99,12 @@ module attention_kv_top #(parameter integer ADDR_WIDTH=64,GROUP_SIZE=32,
                 if(kv_status==0 && candidate.config_id==kv_completion_id) saved_cfg<=candidate;
                 state<=COMPLETE;
             end
-            CHECK:if(bad_region || aliases) begin completion_status<=STATUS_BAD_REGION;state<=COMPLETE;end
-                else state<=START;
+            CHECK:if(bad_q_flags) begin completion_status<=STATUS_BAD_FLAGS;state<=COMPLETE;end
+                else if(bad_region || aliases || bad_q_region) begin completion_status<=STATUS_BAD_REGION;state<=COMPLETE;end
+                else if(bad_shape) begin completion_status<=STATUS_BAD_DIM;state<=COMPLETE;end
+                else state<=memory_q?QLOAD:START;
+            QLOAD:if(dma_failed && dma_idle) begin completion_status<=STATUS_READ_ERROR;state<=DRAIN;end
+                else if(dma_loaded && dma_idle) state<=START;
             START:if(core_query_ready) state<=QUERY;
             QUERY:begin
                 if(core_out_valid && core_out_ready) outputs<=outputs+1;
@@ -125,8 +157,8 @@ module attention_kv_top #(parameter integer ADDR_WIDTH=64,GROUP_SIZE=32,
         .read_valid(kv_read_valid),.read_ready(state==QUERY?core_read_ready:read_ready),.read_data(kv_read_data),.read_last(kv_read_last),
         .completion_valid(kv_completion),.completion_ready(kv_completion_ready),.completion_id(kv_completion_id),.completion_status(kv_status),
         .configured(configured),.query_layer(active.layer),.query_head(active.head),.query_valid(metadata_valid),.query_length(committed),
-        .arvalid(arvalid),.arready(arready),.araddr(araddr),.arid(arid),.arlen(arlen),.arsize(arsize),.arburst(arburst),
-        .rvalid(rvalid),.rready(rready),.rdata(rdata),.rid(rid),.rresp(rresp),.rlast(rlast),
+        .arvalid(arvalid_k),.arready(arready && !q_owner),.araddr(araddr_k),.arid(arid_k),.arlen(arlen_k),.arsize(arsize_k),.arburst(arburst_k),
+        .rvalid(rvalid && !q_owner),.rready(rready_k),.rdata(rdata),.rid(rid),.rresp(rresp),.rlast(rlast),
         .awvalid(awvalid_k),
         .awaddr(awaddr_k),
         .awid(awid_k),
@@ -140,10 +172,17 @@ module attention_kv_top #(parameter integer ADDR_WIDTH=64,GROUP_SIZE=32,
         .bready(bready_k),
         .awready(awready && !query_owner),.wready(wready && !query_owner),.bvalid(bvalid && !query_owner),.bid(bid),.bresp(bresp),
         .cycles(),.accepted_bytes(),.acknowledged_bytes(),.returned_bytes(),.read_wait(),.write_wait());
+    attention_q_dma #(.ADDR_WIDTH(ADDR_WIDTH),.GROUP_SIZE(GROUP_SIZE),.MAX_DIM(MAX_DIM)) q_loader(
+        .clk(clk),.rst(rst || state==IDLE || state==COMPLETE),.load_valid(state==QLOAD),.load_ready(),.desc(active),
+        .loaded(dma_loaded),.failed(dma_failed),.idle(dma_idle),.send_enable(state==QUERY),
+        .out_valid(dma_q_valid),.out_ready(core_q_ready && state==QUERY),.out_data(dma_q_data),.out_scale(dma_q_scale),.out_last(dma_q_last),
+        .arvalid(arvalid_q),.arready(arready && q_owner),.araddr(araddr_q),.arid(arid_q),.arlen(arlen_q),.arsize(arsize_q),.arburst(arburst_q),
+        .rvalid(rvalid && q_owner),.rready(rready_q),.rdata(rdata),.rid(rid),.rresp(rresp),.rlast(rlast));
     attention_compute #(.GROUP_SIZE(GROUP_SIZE),.MAX_DIM(MAX_DIM),.MAX_TOKENS(MAX_TOKENS)) compute(
         .clk(clk),.rst(rst || state==IDLE || state==DRAIN || state==COMPLETE),.query_valid(state==START),.query_ready(core_query_ready),
         .query_desc(active),.metadata_valid(metadata_valid),.committed_tokens(committed),.cache_dimension(saved_cfg.dimension),
-        .q_valid(q_valid && state==QUERY),.q_ready(q_ready),.q_data(q_data),.q_scale(q_scale),.q_last(q_last),
+        .q_valid(state==QUERY && (memory_q?dma_q_valid:q_valid)),.q_ready(core_q_ready),
+        .q_data(memory_q?dma_q_data:q_data),.q_scale(memory_q?dma_q_scale:q_scale),.q_last(memory_q?dma_q_last:q_last),
         .cmd_valid(core_cmd_valid),.cmd_ready(core_cmd_ready),.cmd_desc(core_cmd),
         .cache_valid(kv_read_valid),.cache_ready(core_read_ready),.cache_data(kv_read_data),.cache_last(kv_read_last),
         .cache_completion_valid(kv_completion),.cache_completion_ready(core_completion_ready),

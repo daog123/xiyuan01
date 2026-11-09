@@ -1,0 +1,12 @@
+{
+  "scope": "Frozen inputs required by R7 benchmark and protected-compute checks; not the full 330-file historical snapshot",
+  "source_sha256": {
+    "rtl/w4a8_axi_read.sv": "7192cc44e5319a80867e0b80c5d97a46e1833221e62a105a8526434f6b8f9082",
+    "rtl/w4a8_memory_packet.sv": "651e27f25024b6e0dcb0facdbc68d39aed9ba3dc404c8b82d670f327670d5815",
+    "rtl/w4a8_memory_bridge.sv": "29035caca9441de8d10a6772d1ae0b22db137e9edc862bcc1cda9f9d663e84c6",
+    "rtl/w4a8_wave.sv": "50e92389d3f2743216d7236cf2b19d966316dc9838aa8c71624a1e0640818eb7",
+    "rtl/llm_graph_top.sv": "698cd9284133111e6c2559b870a3ef6727a42ae884f679a1b20d321c62a8e77d",
+    "rtl/ffn_dma.sv": "45ee5b56adeb39464fbf43a2837e5c1b0f7734220cf5ccb5ccc70d63fe903ee8",
+    "rtl/attention_q_dma.sv": "d413e19b73c3fe43d307a34d3f2ad03db564863e8d1ff2847a9cd567e0c3d847"
+  }
+}

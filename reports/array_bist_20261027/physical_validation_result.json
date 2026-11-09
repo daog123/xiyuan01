@@ -1,0 +1,97 @@
+{
+  "status": "PASS",
+  "self_rtl_on_fpga": true,
+  "scope": "4x4 production systolic integer compute array; ROM inputs and on-chip exact comparisons",
+  "target_part": "xcvu9p_CIV-flgb2104-2-i",
+  "target_pci": "0000:84:00.0",
+  "cases": 8,
+  "compared_outputs": 128,
+  "valid_outputs": 96,
+  "inactive_zero_checks": 32,
+  "valid_macs": 2522,
+  "errors": 0,
+  "negative_control_errors": 1,
+  "checksum16": "0x1f41",
+  "positive_crc_frames": 3,
+  "negative_crc_frames": 2,
+  "raw_samples": 72184,
+  "source_core": "E:/speed-up/rtl/w4a8_wave.sv:w4a8_compute_array",
+  "compute_data_transport": "fixed ROM; host reads CRC-protected checksum and error counts, not raw output matrices",
+  "reference_restored": true,
+  "final_hardware_status": {
+    "target_pci": "0000:84:00.0",
+    "timestamp": "2026-10-27T17:21:39.231618+08:00",
+    "management": {
+      "version": "0xe1e1c113",
+      "done": "0x1",
+      "link": "0x3"
+    },
+    "dma_status": {
+      "h2c_0": "0x0",
+      "h2c_1": "0x0",
+      "h2c_2": "0x0",
+      "h2c_3": "0x0",
+      "c2h_0": "0x0",
+      "c2h_1": "0x0",
+      "c2h_2": "0x0",
+      "c2h_3": "0x0"
+    },
+    "enumerated_cards": [
+      "0000:84:00.0",
+      "0000:d4:00.0",
+      "0000:45:00.0",
+      "0000:32:00.0"
+    ],
+    "reference_control_status": "0x30",
+    "status": "PASS"
+  },
+  "evidence_archive_sha256": "f4d5add98cb182cf16c43850c7009a029040b1f284543f11560cb99ce5b558a4",
+  "physical_run": "run-array-20261027-171928-zxojTn",
+  "frames": [
+    {
+      "start": 3.253513715,
+      "unit": 0.04334750733517773,
+      "word": "c64a11081f410023",
+      "status": 1,
+      "cases": 8,
+      "checksum": 8001,
+      "errors": 0
+    },
+    {
+      "start": 9.669414975,
+      "unit": 0.043349170417700866,
+      "word": "c64a12081f410182",
+      "status": 2,
+      "cases": 8,
+      "checksum": 8001,
+      "errors": 1
+    },
+    {
+      "start": 16.0842747,
+      "unit": 0.04335265398516092,
+      "word": "c64a11081f410023",
+      "status": 1,
+      "cases": 8,
+      "checksum": 8001,
+      "errors": 0
+    },
+    {
+      "start": 22.500638342,
+      "unit": 0.04333930065509307,
+      "word": "c64a12081f410182",
+      "status": 2,
+      "cases": 8,
+      "checksum": 8001,
+      "errors": 1
+    },
+    {
+      "start": 28.913980821,
+      "unit": 0.04334572448286924,
+      "word": "c64a11081f410023",
+      "status": 1,
+      "cases": 8,
+      "checksum": 8001,
+      "errors": 0
+    }
+  ]
+}

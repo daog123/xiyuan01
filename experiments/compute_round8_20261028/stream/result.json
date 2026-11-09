@@ -1,0 +1,29 @@
+{
+  "status": "PASS",
+  "selected": {
+    "case_id": "3",
+    "mode": "0",
+    "recovery": "0",
+    "N": "64",
+    "K": "2048",
+    "cycles": "9510",
+    "input_beats": "9488",
+    "weight_bytes": "65536",
+    "activation_bytes": "2048",
+    "sx_bytes": "128",
+    "sw_bytes": "8192",
+    "valid_macs": "131072",
+    "compute_cycles": "2048",
+    "input_wait_cycles": "0",
+    "output_wait_cycles": "0",
+    "held_checks": "62"
+  },
+  "simulation_cases": 55,
+  "negative_probe": true,
+  "source_sha256": {
+    "rtl\\w4a8_gemv_stream.sv": "e31d39a54492ce710301e8dcfc5aa5c78eb6024a106bf55f0100c733cc493137",
+    "tb_stream.sv": "aaf2b3685ac2414cbb7cae81552e98ae2bdfdc8dc2cce3f28345890e7c8b387f",
+    "run.py": "fa3ef959ae7482aa8eb5d8a3f378b58dcbcac5d7f925da9aec97aac839400aa3",
+    "stream\\vectors.txt": "bf1b57a576a11172c0d7a2e26f40079b1c616fd7196ce57833b2bda7e3545f6e"
+  }
+}

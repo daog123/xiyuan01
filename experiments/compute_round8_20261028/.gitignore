@@ -1,0 +1,3 @@
+# Captured logs are part of this independently reproduced research experiment.
+!*.log
+!**/*.log

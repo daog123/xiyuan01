@@ -1,6 +1,6 @@
 # 项目长期规划与阶段任务
 
-更新日期：2026-10-18。本文是未来开发计划；任务勾选表示交付状态，不代表讨论过即已实现。
+更新日期：2026-10-25。本文是未来开发计划；任务勾选表示交付状态，不代表讨论过即已实现。
 
 ## 1. 项目来源与当前基线
 
@@ -11,25 +11,26 @@
 - C/E：本地更新的计算与数值模块；整合前的工作已建立版本检查点。
 - 整体化：统一任务入口、完成与 fence 路由、64 位地址、FFN 中间数据真实外存写回、KV/Attention、软件接口与验证入口。
 
-关键历史：`163d8ee` 保存本地 C/E，`78d8686` 合并 A/D，`bff0f50` 完成三人第一阶段整合，`af1f0a6` 完成统一算子系统 v2。本规划以 `af1f0a6` 为实现基线；新增规划不会自动增加硬件功能。
+关键历史：`163d8ee` 保存本地 C/E，`78d8686` 合并 A/D，`bff0f50` 完成三人第一阶段整合，`af1f0a6` 完成统一算子系统 v2。原规划以 `af1f0a6` 为基线；截至2026-10-25，当前工作区已推进到 ABI v5、自动Q/K/V投影/量化/KV追加/Attention链及FFN word读取和第二轮计算优化（GEMV K并行、并行后处理、TILE_K32及打包研究），详见 docs/compute_round2.md。其余未勾选规划尚未实现。
 
 ### 已完成
 
-- [x] `llm_top / ABI v2` 接受 LINEAR、FFN、ATTENTION、KV_CONFIG、KV_COMMAND，单活动任务顺序执行。
+- [x] `llm_top / ABI v3` 接受 LINEAR、FFN、ATTENTION、KV_CONFIG、KV_COMMAND，单活动任务顺序执行。
 - [x] 主通路 64 位地址、32 位兼容模式、范围/回绕和危险别名检查。
 - [x] FFN：gate/up 外存写确认 → 读取 → SiLU×up/动态量化 → qx/sx 外存写确认 → down。
 - [x] 按 layer/head 管理事务式 KV；Attention 完成 QK、近似稳定 Softmax、AV 与输出写回确认。
 - [x] 统一软件 API、配置、RTL 清单和 test/implement/status/legacy 入口。
+- [x] 第二轮计算核优化与受控上游比较：主系统4×4/TILE_K32，8×8研究核、广播及精确打包；50行实测、核心/系统回归和OOC实现通过，详见 docs/compute_round2.md。这不代表M1整图或模型阶段已完成。
 
 ### 当前明确限制
 
 | 项目 | 当前范围 |
 |---|---|
 | Attention | 默认每次单 query，最大可见前缀 16 token、维度 64；最大 layers=4、heads=8；可见范围由调用方选择，且不得超出 KV 已提交长度 |
-| Q 输入 | signed INT8 流与重复的逐组 UQ4.12 scale；自动投影到 Q 流尚未接通 |
-| 线性任务 | 默认 max M=64、N=64、K=4096；阵列 4×4；group size=32 |
+| Q/K/V | 已接通单query、单head的三投影/量化/KV追加/Attention；Q也支持原有流和内存输入，见docs/qkv_attention.md |
+| 线性任务 | 默认 max M=64、N=64、K=4096；阵列 4×4、TILE_K32；group size=32 |
 | FFN | 默认 H≤64，M×H≤512；共享计算核的 group size 为编译配置 |
-| 外存接口 | 窄单拍、单 outstanding AXI；不是高带宽 DDR 数据通路 |
+| 外存接口 | 矩阵权重双行窗口及sx缓存；激活有界最多4拍burst/四槽返回缓冲，单outstanding；向量/Q/KV保留原读取路径，尚非DDR高带宽通路 |
 | 未完成运算图 | 完整 Q/K/V/O 自动链、RMSNorm、RoPE、残差、多层模型与 token 生成 |
 | 板级 | 器件配置暂为 xcvu9p-flga2104-2L-e，实际板卡未确认；DDR/PCIe、CDC、引脚和 I/O 约束尚未接齐 |
 
@@ -57,13 +58,20 @@
 
 交付：接口/数值说明、参考配置、固定输入与软件参考。验收：所有成员可以独立生成一致的输入和阶段结果。
 
-### M1：自动 Q/K/V → Attention → O 链路（下一轮首要任务）
+### M1：自动 Q/K/V → Attention → O 链路（继续推进）
+
+第三轮当前实现见 [system_round3.md](docs/system_round3.md) 和 [projected_attention.md](docs/projected_attention.md)。已由ABI v5推进到Q/K/V→KV追加→Attention，O/RoPE未接通，仍未完成整个M1；当前见docs/system_round4.md。
+
 
 - [ ] 用一次图请求描述 Q/K/V/O 的矩阵任务、量化、KV 操作与缓冲区；明确图级任务 ID、子任务和状态。
-- [ ] 自动执行 Q/K/V 投影及所需量化与写回。
-- [ ] 增加 Q DMA/流转换，从外存读取投影结果并正确产生 scale 和 last。
-- [ ] K/V append 确认完成后才允许 Attention 读取；Attention Y 写确认后才允许 O 投影。
-- [ ] 检查整图形状、地址、容量和不安全的别名；对运行时错误停止后续阶段并处理已发出的事务。
+- [x] 自动执行单query、单head的Q/K/V投影和完整group量化，K/V自动事务式append，再执行Attention（ABI v5）。
+- [x] 增加已量化 Q/scale 的内存预取和流转换，覆盖反压、读错误、复位恢复及 32/64 位地址（2026-10-25）。
+- [x] 接通Q投影→Q16.16写确认→片上完整group量化→Attention，一次提交返回根完成（ABI v4）；scale在片上缓存，无需额外Q/scale写回。
+- [x] 接通K/V自动append及提交确认后再执行Q/Attention；完成时保留阶段，支持提交后仅Q恢复。
+- [ ] 接入RoPE和O投影，扩展为完整Attention子图。
+- [x] K/V append确认完成后才启动Q投影和Attention；覆盖延迟B、追加失败和提交后Q错误恢复。
+- [ ] Attention Y写确认后自动量化并启动O投影。
+- [ ] 扩展已有Q链路的检查到完整Q/K/V/O图：形状、地址、容量和不安全的别名；对运行时错误停止后续阶段并处理已发出的事务。
 - [ ] 将该链路纳入统一运行入口、配置、源码清单与日志。
 
 交付：现有小尺寸下自动运行的投影/Attention 链。验收：一次提交完成全链，无须主机手工喂 Q 或在阶段间搬运数据；各阶段对照整数参考；覆盖延迟响应、读写错误、连续任务、复位恢复与 ID 路由。M1 本身尚不是完整 Block。
@@ -119,6 +127,8 @@
 
 ## 5. 验证基线与复现入口
 
+第二轮当前记录为20软件测试、12配置/261条完成记录；10ns OOC WNS +0.221ns、WHS +0.011ns、61,010条网络全部路由。详细数据、源哈希和历史范围见 [compute_round2.md](docs/compute_round2.md)；以下基线数字保留为历史记录。
+
 实现基线 `af1f0a6` 的本地记录包括 19 个软件单元测试、8 组系统 RTL 配置、141 条完成记录、3,211,264 字节完整内存比较，以及原有 7 类兼容套件。该记录用于说明已有覆盖范围，不等于新环境已完成回归。
 
 同一基线的 VU9P、10 ns 内部时钟 OOC 布局布线记录为 WNS +0.321 ns、WHS +0.010 ns，56,725 条可路由网络全部完成、路由错误 0。实际板卡尚未确认，这些结果不是板级 DDR/PCIe 或真实模型验证。
@@ -146,3 +156,7 @@ python .\scripts\project.py legacy
 - [ ] 更新当前状态和剩余限制；满足验收后再标记完成并推进 M2。
 
 相关文档：[当前状态](docs/project_status.md)、[架构](docs/system_architecture.md)、[数值合同](docs/system_numerics.md)、[验证说明](docs/system_validation.md)。
+
+第六轮进展：完成有界激活burst/返回缓冲及完整算子配对，详见[报告](docs/system_round6.md)。M3中的多outstanding、双缓冲与阶段重叠等仍未完成，整体条目保持未勾选。
+
+第七轮进展：完成权重行窗口、sx复用及关闭/单项消融，详见[报告](docs/system_round7.md)。多outstanding、计算搬运双缓冲和阶段重叠仍待实现，整体规划条目保持未勾选。

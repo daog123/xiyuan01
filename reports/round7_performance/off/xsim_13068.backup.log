@@ -1,0 +1,38 @@
+#-----------------------------------------------------------
+# xsim v2025.2 (64-bit)
+# SW Build 6299465 on Fri Nov 14 19:35:11 GMT 2025
+# IP Build 6300035 on Fri Nov 14 10:48:45 MST 2025
+# SharedData Build 6298862 on Thu Nov 13 04:50:51 MST 2025
+# Start of session at: Mon Oct 26 22:18:37 2026
+# Process ID         : 13068
+# Current directory  : E:/speed-up/build/round7_performance/off
+# Command line       : xsim.exe -mode tcl -source {xsim.dir/tb_perf_g12/xsim_script.tcl}
+# Log file           : E:/speed-up/build/round7_performance/off/xsim.log
+# Journal file       : E:/speed-up/build/round7_performance/off\xsim.jou
+# Running On         : LAPTOP-SCQRVP01
+# Platform           : Windows Server 2016 or Windows 10
+# Operating System   : 26200
+# Processor Detail   : Intel(R) Core(TM) i7-14650HX
+# CPU Frequency      : 2419 MHz
+# CPU Physical cores : 16
+# CPU Logical cores  : 24
+# Host memory        : 16873 MB
+# Swap memory        : 13958 MB
+# Total Virtual      : 30832 MB
+# Available Virtual  : 7557 MB
+#-----------------------------------------------------------
+source xsim.dir/tb_perf_g12/xsim_script.tcl
+# xsim {tb_perf_g12} -autoloadwcfg -tclbatch {E:/speed-up/scripts/run_xsim.tcl}
+Time resolution is 1 ps
+source E:/speed-up/scripts/run_xsim.tcl
+## run 20 ms
+PERF_RECORD opcode=0 case=0 group=12 read_delay=8 write_delay=4 cycles=3980 reads=292 writes=37 acks=37 bytes=65536 read_payload=577 read_beats=292 burst_reads=0
+PERF_RECORD opcode=0 case=1 group=12 read_delay=8 write_delay=4 cycles=6787 reads=507 writes=87 acks=87 bytes=65536 read_payload=945 read_beats=507 burst_reads=0
+PERF_RECORD opcode=0 case=2 group=12 read_delay=8 write_delay=4 cycles=3069 reads=220 writes=50 acks=50 bytes=65536 read_payload=357 read_beats=220 burst_reads=0
+PERF_RECORD opcode=1 case=0 group=12 read_delay=8 write_delay=4 cycles=12448 reads=781 writes=124 acks=124 bytes=65536 read_payload=1638 read_beats=781 burst_reads=0
+PERF_RECORD opcode=1 case=1 group=12 read_delay=8 write_delay=4 cycles=22162 reads=1350 writes=300 acks=300 bytes=65536 read_payload=2856 read_beats=1350 burst_reads=0
+PERF_RECORD opcode=1 case=2 group=12 read_delay=8 write_delay=4 cycles=10945 reads=615 writes=168 acks=168 bytes=65536 read_payload=1233 read_beats=615 burst_reads=0
+PERFORMANCE_TESTS_PASS group=12 read_delay=8 tasks=6 bytes=393216
+$finish called at time : 594700 ns : File "E:/speed-up/tb/tb_accelerator.sv" Line 107
+## quit
+INFO: [Common 17-206] Exiting xsim at Mon Oct 26 22:18:43 2026...

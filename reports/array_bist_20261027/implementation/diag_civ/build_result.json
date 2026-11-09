@@ -1,0 +1,27 @@
+{
+  "status": "PASS",
+  "variant": "diag_civ",
+  "mode": 0,
+  "corrupt_golden": false,
+  "bit_bytes": 80159250,
+  "bit_sha256": "31ac71f70c033dbb2b4a4205ee5441808287d991a607d4a551115ff97ba97efc",
+  "checksum16": 8001,
+  "source_sha256": {
+    "E:\\speed-up\\rtl\\mac_pe.sv": "0dda82b9b9c6a9e72ae08cb6f2b230197808f560762445471d3d734a84fda371",
+    "E:\\speed-up\\rtl\\w4a8_wave.sv": "50e92389d3f2743216d7236cf2b19d966316dc9838aa8c71624a1e0640818eb7",
+    "E:\\speed-up\\experiments\\array_bist_20261027\\array_bist_engine.sv": "70ea942622491d6a76113645bc1b91cd6145e9acc022b3c75a17d217cf07d40f",
+    "E:\\speed-up\\experiments\\array_bist_20261027\\done_telemetry.sv": "243ad6caf6cb4838c3291fdd1976df7d5bf64e01065d05e08b96807438bb2e79",
+    "E:\\speed-up\\experiments\\array_bist_20261027\\array_selftest_top.sv": "d23984d632115c47bd901727cd6fb7a71c04509545e61aa05341615b7b817563",
+    "E:\\speed-up\\experiments\\array_bist_20261027\\generate_vectors.py": "9d01db7cc743b5ac5b1e4a713515f6cb5b998fbb5503a083b094dadb11e8bb2d",
+    "E:\\speed-up\\experiments\\array_bist_20261027\\shapes.svh": "2e8aba79eac75e7fabd53ea604e9e8417037c79af32cc37fb84ca5b72f1411be",
+    "E:\\speed-up\\experiments\\array_bist_20261027\\a.hex": "a3004b51cf135316d0a31979de98aa931e1386e592cb0cc35c0c20b27d47c11d",
+    "E:\\speed-up\\experiments\\array_bist_20261027\\b.hex": "5a270aeb81da62ed17a1e98144eba96b16a3414af90a3de0dd249d8da1a2d082",
+    "E:\\speed-up\\experiments\\array_bist_20261027\\golden.hex": "09040dc7142f7f7efbf0876453b1714c79e619ff3ef92ffdf9817f084da9fc19",
+    "E:\\speed-up\\experiments\\array_bist_20261027\\decode_done.py": "7ac92f52c76462bfde1d349919d22d35301d421dea39ce890c80b7ea8c659212",
+    "E:\\speed-up\\experiments\\array_bist_20261027\\run_local.py": "c45299658804aac1f838d94d5533578c5eb5f30208f811a156cd4d39b45dffad"
+  },
+  "general_purpose_io": 0,
+  "target_part": "xcvu9p_CIV-flgb2104-2-i",
+  "idcode": "0x04b35093",
+  "self_rtl_on_fpga": false
+}

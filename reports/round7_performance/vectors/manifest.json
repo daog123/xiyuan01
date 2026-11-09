@@ -1,0 +1,62 @@
+[
+  {
+    "group": 32,
+    "case": 0,
+    "m": 1,
+    "k": 19,
+    "h": 37,
+    "n": 5,
+    "quant_bytes": 37,
+    "scale_bytes": 4
+  },
+  {
+    "group": 32,
+    "case": 1,
+    "m": 3,
+    "k": 35,
+    "h": 29,
+    "n": 7,
+    "quant_bytes": 87,
+    "scale_bytes": 6
+  },
+  {
+    "group": 32,
+    "case": 2,
+    "m": 2,
+    "k": 13,
+    "h": 25,
+    "n": 3,
+    "quant_bytes": 50,
+    "scale_bytes": 4
+  },
+  {
+    "group": 12,
+    "case": 0,
+    "m": 1,
+    "k": 19,
+    "h": 37,
+    "n": 5,
+    "quant_bytes": 37,
+    "scale_bytes": 8
+  },
+  {
+    "group": 12,
+    "case": 1,
+    "m": 3,
+    "k": 35,
+    "h": 29,
+    "n": 7,
+    "quant_bytes": 87,
+    "scale_bytes": 18
+  },
+  {
+    "group": 12,
+    "case": 2,
+    "m": 2,
+    "k": 13,
+    "h": 25,
+    "n": 3,
+    "quant_bytes": 50,
+    "scale_bytes": 12
+  }
+]

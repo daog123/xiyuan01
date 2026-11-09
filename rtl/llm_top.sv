@@ -1,5 +1,5 @@
 // One host submission and one AXI owner across linear, FFN, KV and attention.
-module llm_top #(parameter integer ADDR_WIDTH=64,GROUP_SIZE=32,ROWS=4,COLS=4,TILE_K=8,
+module llm_top #(parameter integer ADDR_WIDTH=64,GROUP_SIZE=32,ROWS=4,COLS=4,TILE_K=32,
     MAX_M=64,MAX_N=64,MAX_K=4096,MAX_H=64,CAPACITY=512,MAX_DIM=64,MAX_TOKENS=16)(
     input logic clk,rst,job_valid,output logic job_ready,input logic [7:0] job_opcode,
     input accelerator_pkg::bounded_task_t linear_task,input accelerator_pkg::ffn_plan_t ffn_plan,
@@ -23,7 +23,7 @@ module llm_top #(parameter integer ADDR_WIDTH=64,GROUP_SIZE=32,ROWS=4,COLS=4,TIL
     input logic bvalid,output logic bready,input logic [3:0] bid,input logic [1:0] bresp
 );
     import accelerator_pkg::*;import task_desc_pkg::*;
-    typedef enum logic [1:0] {IDLE,ISSUE,RUN,REJECT} state_t;
+    typedef enum logic [2:0] {IDLE,CHECK_GRAPH,ISSUE,RUN,REJECT} state_t;
     state_t state;logic [7:0] opcode;
     bounded_task_t saved_linear;ffn_plan_t saved_ffn;kv_cache_pkg::kv_config_t saved_cfg;
     kv_cache_pkg::kv_command_t saved_cmd;attention_pkg::attention_task_t saved_attention;
@@ -31,32 +31,66 @@ module llm_top #(parameter integer ADDR_WIDTH=64,GROUP_SIZE=32,ROWS=4,COLS=4,TIL
     logic [31:0] linear_id,attention_id,reject_id;logic [7:0] linear_status,attention_status;
     logic [3:0] linear_stage;
     logic [31:0] linear_elapsed,linear_activation_written,linear_scale_written;
-    wire attention_owner=opcode>=OP_ATTENTION;
+    logic graph_attention;
+    logic [7:0] reject_status;
+    kv_cache_pkg::kv_config_t current_cfg;
+    wire graph_active=opcode==OP_Q_ATTENTION;
+    wire attention_owner=opcode>=OP_ATTENTION && (!graph_active || graph_attention);
+    logic graph_alias;
+    always_comb begin
+        graph_alias=w4a8_memory_pkg::overlaps(saved_linear.desc.y_addr,saved_linear.y_bytes,saved_attention.y_addr,saved_attention.y_bytes);
+        for(integer p=0;p<4;p++) begin
+            if(w4a8_memory_pkg::overlaps(saved_linear.desc.y_addr,saved_linear.y_bytes,current_cfg.base[p],current_cfg.bytes[p]) ||
+                w4a8_memory_pkg::overlaps(saved_attention.y_addr,saved_attention.y_bytes,current_cfg.base[p],current_cfg.bytes[p])) graph_alias=1;
+        end
+        if(w4a8_memory_pkg::overlaps(saved_attention.y_addr,saved_attention.y_bytes,saved_linear.desc.a_addr,saved_linear.a_bytes) ||
+            w4a8_memory_pkg::overlaps(saved_attention.y_addr,saved_attention.y_bytes,saved_linear.desc.w_addr,saved_linear.w_bytes) ||
+            w4a8_memory_pkg::overlaps(saved_attention.y_addr,saved_attention.y_bytes,saved_linear.desc.sx_addr,saved_linear.sx_bytes) ||
+            w4a8_memory_pkg::overlaps(saved_attention.y_addr,saved_attention.y_bytes,saved_linear.desc.sw_addr,saved_linear.sw_bytes)) graph_alias=1;
+    end
     assign job_ready=state==IDLE && !rst;
-    assign completion_valid=!rst && (state==REJECT || (state==RUN && (attention_owner?attention_done:linear_done)));
-    assign completion_task_id=state==REJECT?reject_id:attention_owner?attention_id:linear_id;
-    assign completion_status=state==REJECT?STATUS_BAD_FLAGS:attention_owner?attention_status:linear_status;
+    assign completion_valid=!rst && (state==REJECT || (state==RUN && (attention_owner?attention_done:linear_done))) &&
+        !(graph_active && !graph_attention && state==RUN && linear_status==STATUS_OK);
+    assign completion_task_id=state==REJECT?reject_id:graph_active?saved_attention.task_id:attention_owner?attention_id:linear_id;
+    assign completion_status=state==REJECT?reject_status:attention_owner?attention_status:linear_status;
     assign result_available=completion_valid && completion_status==STATUS_OK;
     assign activation_written=attention_owner?0:linear_activation_written;
     assign scale_written=attention_owner?0:linear_scale_written;
-    assign stage=state==IDLE?0:!attention_owner?linear_stage:opcode==OP_ATTENTION?5:opcode==OP_KV_CONFIG?6:7;
+    assign stage=state==IDLE?0:graph_active && !graph_attention?1:!attention_owner?linear_stage:(opcode==OP_ATTENTION || graph_active)?5:opcode==OP_KV_CONFIG?6:7;
     always_ff @(posedge clk) begin
-        if(rst) begin state<=IDLE;opcode<=0;saved_linear<='0;saved_ffn<='0;saved_cfg<='0;saved_cmd<='0;saved_attention<='0;reject_id<=0;elapsed_cycles<=0;end
+        if(rst) begin state<=IDLE;opcode<=0;saved_linear<='0;saved_ffn<='0;saved_cfg<='0;saved_cmd<='0;saved_attention<='0;reject_id<=0;elapsed_cycles<=0;graph_attention<=0;reject_status<=STATUS_BAD_FLAGS;current_cfg<='0;end
         else begin
-        if((state==ISSUE || state==RUN) && !completion_valid) elapsed_cycles<=elapsed_cycles+1;
+        if(state==RUN && opcode==OP_KV_CONFIG && attention_done && attention_status==STATUS_OK)current_cfg<=saved_cfg;
+        if((state==CHECK_GRAPH || state==ISSUE || state==RUN) && !completion_valid) elapsed_cycles<=elapsed_cycles+1;
         case(state)
             IDLE:if(job_valid) begin
                 saved_linear<=linear_task;saved_ffn<=ffn_plan;saved_cfg<=kv_config;saved_cmd<=kv_command;saved_attention<=attention_task;
-                opcode<=job_opcode;
+                opcode<=job_opcode;graph_attention<=0;reject_status<=STATUS_BAD_FLAGS;
                 reject_id<=job_opcode==OP_KV_CONFIG?kv_config.config_id:job_opcode==OP_KV_COMMAND?kv_command.task_id:
                     job_opcode==OP_LINEAR?linear_task.desc.task_id:job_opcode==OP_FFN?ffn_plan.task_id:attention_task.task_id;
                 elapsed_cycles<=0;
-                if(job_opcode>OP_KV_COMMAND || (job_opcode==OP_KV_CONFIG && configured) || (job_opcode==OP_KV_COMMAND && !configured)) state<=REJECT;
+                if(job_opcode>OP_Q_ATTENTION || (job_opcode==OP_Q_ATTENTION && !configured) || (job_opcode==OP_KV_CONFIG && configured) || (job_opcode==OP_KV_COMMAND && !configured)) state<=REJECT;
+                else state<=job_opcode==OP_Q_ATTENTION?CHECK_GRAPH:ISSUE;
+            end
+            CHECK_GRAPH:begin
+                if(saved_attention.q_source!=2)begin reject_status<=STATUS_BAD_FLAGS;state<=REJECT;end
+                else if(saved_linear.desc.m!=1 || saved_linear.desc.n!=saved_attention.dimension ||
+                    saved_attention.dimension==0 || saved_attention.dimension>MAX_DIM || saved_attention.tokens==0 ||
+                    saved_attention.tokens>MAX_TOKENS || saved_attention.score_scale==0 ||
+                    saved_attention.layer>=current_cfg.layers || saved_attention.head>=current_cfg.heads ||
+                    saved_attention.dimension!=current_cfg.dimension)begin reject_status<=STATUS_BAD_DIM;state<=REJECT;end
+                else if(graph_alias || saved_attention.q_addr!=saved_linear.desc.y_addr || saved_attention.q_bytes!=saved_linear.y_bytes ||
+                    saved_attention.qs_addr!=0 || saved_attention.qs_bytes!=0 || saved_attention.q_addr[1:0]!=0 ||
+                    saved_attention.y_addr[1:0]!=0 || saved_attention.q_bytes<4*32'(saved_attention.dimension) ||
+                    saved_attention.y_bytes<4*32'(saved_attention.dimension) ||
+                    65'(saved_attention.q_addr)+65'(saved_attention.q_bytes)>(65'd1<<ADDR_WIDTH) ||
+                    65'(saved_attention.y_addr)+65'(saved_attention.y_bytes)>(65'd1<<ADDR_WIDTH))begin reject_status<=STATUS_BAD_REGION;state<=REJECT;end
                 else state<=ISSUE;
             end
-            ISSUE:if((opcode<=OP_FFN && linear_ready) || (opcode==OP_ATTENTION && query_ready) ||
+            ISSUE:if((!attention_owner && linear_ready) || ((opcode==OP_ATTENTION || graph_active && graph_attention) && query_ready) ||
                 (opcode==OP_KV_CONFIG && kv_cfg_ready) || (opcode==OP_KV_COMMAND && kv_cmd_ready)) state<=RUN;
-            RUN:if(completion_valid && completion_ready) state<=IDLE;
+            RUN:if(graph_active && !graph_attention && linear_done && linear_status==STATUS_OK)begin graph_attention<=1;state<=ISSUE;end
+                else if(completion_valid && completion_ready) state<=IDLE;
             REJECT:if(completion_ready) state<=IDLE;
         endcase
         end
@@ -99,9 +133,9 @@ module llm_top #(parameter integer ADDR_WIDTH=64,GROUP_SIZE=32,ROWS=4,COLS=4,TIL
     assign bready=attention_owner?bready_a:bready_l;
     accelerator_top #(.ADDR_WIDTH(ADDR_WIDTH),.GROUP_SIZE(GROUP_SIZE),.ROWS(ROWS),.COLS(COLS),.TILE_K(TILE_K),
         .MAX_M(MAX_M),.MAX_N(MAX_N),.MAX_K(MAX_K),.MAX_H(MAX_H),.CAPACITY(CAPACITY)) linear_ffn(
-        .clk(clk),.rst(rst),.job_valid(state==ISSUE && opcode<=OP_FFN),.job_ready(linear_ready),.job_opcode(opcode),
+        .clk(clk),.rst(rst),.job_valid(state==ISSUE && !attention_owner),.job_ready(linear_ready),.job_opcode(graph_active?OP_LINEAR:opcode),
         .linear_task(saved_linear),.ffn_plan(saved_ffn),.load_pause(load_pause),.post_pause(post_pause),.array_pause(array_pause),
-        .completion_valid(linear_done),.completion_ready(state==RUN && !attention_owner && completion_ready),
+        .completion_valid(linear_done),.completion_ready(state==RUN && !attention_owner && ((graph_active && linear_status==STATUS_OK) || completion_ready)),
         .completion_task_id(linear_id),.completion_status(linear_status),.result_available(),.stage(linear_stage),
         .elapsed_cycles(linear_elapsed),.activation_written(linear_activation_written),.scale_written(linear_scale_written),
         .arvalid(arvalid_l),
@@ -136,7 +170,7 @@ module llm_top #(parameter integer ADDR_WIDTH=64,GROUP_SIZE=32,ROWS=4,COLS=4,TIL
     attention_kv_top #(.ADDR_WIDTH(ADDR_WIDTH),.GROUP_SIZE(GROUP_SIZE),.MAX_DIM(MAX_DIM),.MAX_TOKENS(MAX_TOKENS)) attention(
         .clk(clk),.rst(rst),.cfg_valid(state==ISSUE && opcode==OP_KV_CONFIG),.cfg_ready(kv_cfg_ready),.cfg_desc(saved_cfg),
         .cmd_valid(state==ISSUE && opcode==OP_KV_COMMAND),.cmd_ready(kv_cmd_ready),.cmd_desc(saved_cmd),
-        .query_valid(state==ISSUE && opcode==OP_ATTENTION),.query_ready(query_ready),.query_desc(saved_attention),
+        .query_valid(state==ISSUE && (opcode==OP_ATTENTION || graph_active && graph_attention)),.query_ready(query_ready),.query_desc(saved_attention),
         .append_valid(append_valid && state==RUN),.append_ready(append_ready),.append_data(append_data),.append_last(append_last),
         .read_valid(read_valid),.read_ready(read_ready),.read_data(read_data),.read_last(read_last),
         .q_valid(q_valid && state==RUN),.q_ready(q_ready),.q_data(q_data),.q_scale(q_scale),.q_last(q_last),

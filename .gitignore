@@ -5,6 +5,24 @@ build/
 dfx_runtime.txt
 __pycache__/
 
+# Generated FPGA/tool products; small historical evidence is under reports/.
+xsim.dir/
+*.dcp
+*.bit
+*.sdb
+*.wdb
+*.pb
+*.str
+.pytest_cache/
+.venv/
+venv/
+.env
+.env.*
+
+# Frozen R8 inputs live below a directory named build; these are dependencies.
+!experiments/compute_round8_20261028/reference/build/
+!experiments/compute_round8_20261028/reference/build/**
+
 # Original teammate delivery preserved locally; sources imported above.
 /xiyuan_BF/
 /xiyuan_BF.zip

@@ -1,4 +1,6 @@
-# ABI v2：统一系统架构
+# ABI v3：统一系统架构
+
+> 当前主顶层为llm_graph_top / ABI v5，内部复用llm_top。第四轮阶段与恢复合同见[qkv_attention.md](qkv_attention.md)；下文旧顶层描述用于说明内部引擎与历史结构。
 
 当前主顶层为 `rtl/llm_top.sv`，硬件参数与软件入口由 `config/system_profile.json` 描述，综合与仿真共用 `config/system_sources.txt`。`scripts/project.py` 负责生成参考数据、编译、仿真、实现与当前源码证据校验。
 
@@ -27,7 +29,8 @@ flowchart TD
     D --> V[原 ffn_bridge：SwiGLU 与动态量化]
     V --> Q[qx/sx 写回与写确认]
     Q --> W[down 投影与写确认]
-    A --> K[事务式 KV Cache 与提交长度]
+    A --> QD[可选：Q 与 scale 内存预取并排空响应]
+    QD --> K[事务式 KV Cache 与提交长度]
     K --> C[QK → Softmax → AV]
     C --> Y[Q16.16 Y 写回与写确认]
     F --> X[共享 AXI：当前任务独占]
@@ -58,7 +61,9 @@ Attention 接收一个量化 Q 向量：每个维度一个 signed INT8 字节、
 
 默认最大维度 64、最大可见前缀 16 个 token。当前为单 query、指定 layer/head 的顺序 Attention。Prefill 可按位置提交 query，令 tokens=position+1；Decode 可先 APPEND 新 KV，再对已提交前缀提交 query。tokens 不得超过已提交长度。任意稀疏 mask、滑窗/分页、GQA 自动映射以及跨 query 并行尚未实现。
 
-Q 的输入目前是公开流接口。Q/K/V/O 投影可作为 LINEAR 任务提交，但投影结果的量化、RoPE 和自动送入 Attention 的整张图尚未连接；这部分不等同于已经实现完整 Transformer block。
+Q 输入支持两种来源。`q_source=0` 使用公开流，Q 内存字段必须全零；`q_source=1` 由 `attention_q_dma` 读取已量化 Q 和每组一个 scale。Q 为 dimension 个紧凑 signed INT8 字节，scale 为 `ceil(dimension/GROUP_SIZE)` 个 little-endian UQ4.12；分配区容量、65 位范围、Q/scale 互斥和与 Y 的重叠都在访问前检查。Q 预取阶段独占 AR/R，读响应全部排空才移交给 KV；错误会阻止 Attention 启动。Q 本地流遇到反压保持 data/scale/last，内存模式忽略主机 Q 流。
+
+Q/K/V/O 投影仍可作为 LINEAR 任务提交。当前内存 Q 接入只消费已经量化的 Q，尚未连接投影 Q16.16 结果到 Q 的自动量化、RoPE、完整 Q/K/V/O 图和输出重定量化，因此仍不是完整 Transformer block。
 
 ## 地址与错误处理
 
@@ -73,7 +78,29 @@ Q 的输入目前是公开流接口。Q/K/V/O 投影可作为 LINEAR 任务提�
 | 公共 ABI | task_desc_pkg / w4a8_memory_pkg / accelerator_pkg / attention_pkg / kv_cache_pkg | 主机、边界与计划类型 |
 | 主入口 | llm_top | 五类任务、总线所有权和完成路由 |
 | 线性/FFN | accelerator_top / ffn_dma / w4a8_team_top | 投影调度、真实中间存储与 fence |
-| Attention/KV | attention_kv_top / attention_compute / kv_cache | KV 事务、动态 QK/AV 与近似 Softmax |
+| Attention/KV | attention_kv_top / attention_q_dma / attention_compute / kv_cache | KV 事务、动态 QK/AV 与近似 Softmax |
 | C/E 算术 | w4a8_wave、rtl/vector 中的原模块 | 保留的 W4A8、SiLU、动态 requant |
-| 软件 | software/system.py | ABI v2 的任务、计划、校验与传输无关运行时 |
+| 软件 | software/system.py | ABI v3 的任务、计划、校验与传输无关运行时 |
 | 兼容入口 | 原 task_controller / w4a8_system_top / 各阶段脚本 | 原三方接口和独立模块回归 |
+
+## 第二轮计算核内部结构
+
+主系统默认TILE_K32、group32，4×4阵列。M1在对齐条件满足时把PE行用于K分片，列用于输出N；组内整数归约后进入既有scale合同。其他任务使用普通矩阵路径，有效行列决定波前排空长度。部分和及64位Y按列分bank，一拍快照一行，两个独立后处理lane共享背压和组完成边界。
+
+PACKED_MAC是默认关闭的广播研究路径，两个INT4权重共享一个INT8激活乘法，低位借位修正后分别32位累加；不改变group scale或最终舍入规则。研究核资源和时序不替代主系统或板级结果，详见compute_round2.md。
+
+## ABI v4自动Q链和连续读取
+
+llm_top在Q_ATTENTION任务内部切换LINEAR和Attention所有权，仅在投影写确认后发出内存Q请求，使用Attention ID返回根完成。Q16.16在attention_q_dma内复用动态group量化；共享原矩阵核。w4a8_memory_packet按合法连续字节上限发起1/2/4/8字节读取并一次填充多个packet槽位；其他单字节消费者继续使用原读取接口。详细阶段、边界和复现见[projected_attention.md](projected_attention.md)。
+
+## 第五轮小行数M/K映射
+
+MULTIROW_FOLD默认开启，按当前M块有效行数选择2次幂K并行，激活bank与子树归约保持逻辑行/分组scale对应。支持M2/M4及尾块；不满足tile/group/字宽约束时回到原路径。详见compute_round5.md。
+
+## 第六轮有界激活burst
+
+矩阵packet只为当前有效激活行提供连续范围；最多4拍/32字节、单outstanding、四槽预留和整burst错误检查，按4KiB和有效字节边界截断。权重离散行及向量/Q/KV读取仍保留各自旧路径。数值、B确认、错误排空和stage13恢复合同不变。完整限制与验证见[第六轮报告](system_round6.md)。
+
+## 第七轮权重窗口与sx复用
+
+矩阵packet内部使用两条16字节权重行窗口，按真实连续地址读取后维持原packet顺序；sx以M起点、ml和group为上下文，缓存前128组，任务间或abort清除有效位。默认4行的数据为1KiB分布式RAM；超容量组走外存。单outstanding、写确认和错误排空保持不变。详见[第七轮报告](system_round7.md)。

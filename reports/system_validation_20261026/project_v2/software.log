@@ -1,0 +1,30 @@
+test_reference_zero_and_signed_nibble (software.test_w4a8_software.TaskTests.test_reference_zero_and_signed_nibble) ... ok
+test_rejects_address_range_overflow (software.test_w4a8_software.TaskTests.test_rejects_address_range_overflow) ... ok
+test_rejects_bad_group_and_format (software.test_w4a8_software.TaskTests.test_rejects_bad_group_and_format) ... ok
+test_runtime_accepts_contiguous_tasks (software.test_w4a8_software.TaskTests.test_runtime_accepts_contiguous_tasks) ... ok
+test_split_mn_keeps_k_whole_and_maps_tails (software.test_w4a8_software.TaskTests.test_split_mn_keeps_k_whole_and_maps_tails) ... ok
+test_address_width_and_capacity_overflow (software.test_w4a8_memory_task.MemoryTaskTests.test_address_width_and_capacity_overflow) ... ok
+test_all_allocations_enforced (software.test_w4a8_memory_task.MemoryTaskTests.test_all_allocations_enforced) ... ok
+test_alternate_group_requires_matching_hardware (software.test_w4a8_memory_task.MemoryTaskTests.test_alternate_group_requires_matching_hardware) ... ok
+test_existing_runtime_sends_capacities_and_waits_for_completion (software.test_w4a8_memory_task.MemoryTaskTests.test_existing_runtime_sends_capacities_and_waits_for_completion) ... ok
+test_output_cannot_alias_any_source_allocation (software.test_w4a8_memory_task.MemoryTaskTests.test_output_cannot_alias_any_source_allocation) ... ok
+test_padded_tail_and_serialization (software.test_w4a8_memory_task.MemoryTaskTests.test_padded_tail_and_serialization) ... ok
+test_stride_alignment (software.test_w4a8_memory_task.MemoryTaskTests.test_stride_alignment) ... ok
+test_wire_width_for_stride (software.test_w4a8_memory_task.MemoryTaskTests.test_wire_width_for_stride) ... ok
+test_graph_and_live_workspace_alias (software.test_system.SystemTests.test_graph_and_live_workspace_alias) ... ok
+test_high_address_ffn_and_wire_schema (software.test_system.SystemTests.test_high_address_ffn_and_wire_schema) ... ok
+test_kv_address_space_and_causal_prefix (software.test_system.SystemTests.test_kv_address_space_and_causal_prefix) ... ok
+test_kv_command_schema_and_limits (software.test_system.SystemTests.test_kv_command_schema_and_limits) ... ok
+test_memory_query_allocations (software.test_system.SystemTests.test_memory_query_allocations) ... ok
+test_projected_plan_is_one_transport_submission (software.test_system.SystemTests.test_projected_plan_is_one_transport_submission) ... ok
+test_q16_query_and_projected_plan (software.test_system.SystemTests.test_q16_query_and_projected_plan) ... ok
+test_qkv_postcommit_error_retains_recovery_state (software.test_system.SystemTests.test_qkv_postcommit_error_retains_recovery_state) ... ok
+test_qkv_single_submission_schema_and_alias_checks (software.test_system.SystemTests.test_qkv_single_submission_schema_and_alias_checks) ... ok
+test_qkv_transport_one_doorbell_and_root_id (software.test_system.SystemTests.test_qkv_transport_one_doorbell_and_root_id) ... ok
+test_transport_gets_one_versioned_job_and_actual_completion (software.test_system.SystemTests.test_transport_gets_one_versioned_job_and_actual_completion) ... ok
+test_unknown_opcode_never_reaches_transport (software.test_system.SystemTests.test_unknown_opcode_never_reaches_transport) ... ok
+
+----------------------------------------------------------------------
+Ran 25 tests in 0.003s
+
+OK

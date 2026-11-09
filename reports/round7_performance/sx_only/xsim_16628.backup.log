@@ -1,0 +1,42 @@
+#-----------------------------------------------------------
+# xsim v2025.2 (64-bit)
+# SW Build 6299465 on Fri Nov 14 19:35:11 GMT 2025
+# IP Build 6300035 on Fri Nov 14 10:48:45 MST 2025
+# SharedData Build 6298862 on Thu Nov 13 04:50:51 MST 2025
+# Start of session at: Mon Oct 26 22:06:42 2026
+# Process ID         : 16628
+# Current directory  : E:/speed-up/build/round7_performance/sx_only
+# Command line       : xsim.exe -mode tcl -source {xsim.dir/tb_round7_linear/xsim_script.tcl}
+# Log file           : E:/speed-up/build/round7_performance/sx_only/xsim.log
+# Journal file       : E:/speed-up/build/round7_performance/sx_only\xsim.jou
+# Running On         : LAPTOP-SCQRVP01
+# Platform           : Windows Server 2016 or Windows 10
+# Operating System   : 26200
+# Processor Detail   : Intel(R) Core(TM) i7-14650HX
+# CPU Frequency      : 2419 MHz
+# CPU Physical cores : 16
+# CPU Logical cores  : 24
+# Host memory        : 16873 MB
+# Swap memory        : 17200 MB
+# Total Virtual      : 34074 MB
+# Available Virtual  : 1230 MB
+#-----------------------------------------------------------
+source xsim.dir/tb_round7_linear/xsim_script.tcl
+# xsim {tb_round7_linear} -autoloadwcfg -tclbatch {E:/speed-up/scripts/run_w4a8_memory_xsim.tcl}
+Time resolution is 1 ps
+source E:/speed-up/scripts/run_w4a8_memory_xsim.tcl
+## run all
+LARGE_RECORD case=0 M=1 N=64 K=512 cycles=60160 reads=4384 read_beats=4432 burst_reads=16 read_payload=18976 writes=64 acks=64 wait_r=39456 wait_ar=0 bytes=262144 w_ar=4096 a_ar=16 sx_ar=16 sw_ar=256 w_bytes=16384 a_bytes=512 sx_bytes=32 sw_bytes=2048
+LARGE_RECORD case=1 M=2 N=64 K=512 cycles=60411 reads=4416 read_beats=4512 burst_reads=32 read_payload=19520 writes=128 acks=128 wait_r=39744 wait_ar=0 bytes=262144 w_ar=4096 a_ar=32 sx_ar=32 sw_ar=256 w_bytes=16384 a_bytes=1024 sx_bytes=64 sw_bytes=2048
+LARGE_RECORD case=2 M=4 N=64 K=512 cycles=60919 reads=4480 read_beats=4672 burst_reads=64 read_payload=20608 writes=256 acks=256 wait_r=40320 wait_ar=0 bytes=262144 w_ar=4096 a_ar=64 sx_ar=64 sw_ar=256 w_bytes=16384 a_bytes=2048 sx_bytes=128 sw_bytes=2048
+LARGE_RECORD case=3 M=8 N=64 K=512 cycles=121820 reads=8960 read_beats=9344 burst_reads=128 read_payload=41216 writes=512 acks=512 wait_r=80640 wait_ar=0 bytes=262144 w_ar=8192 a_ar=128 sx_ar=128 sw_ar=512 w_bytes=32768 a_bytes=4096 sx_bytes=256 sw_bytes=4096
+LARGE_RECORD case=4 M=1 N=64 K=4096 cycles=480832 reads=35072 read_beats=35456 burst_reads=128 read_payload=151808 writes=64 acks=64 wait_r=315648 wait_ar=0 bytes=262144 w_ar=32768 a_ar=128 sx_ar=128 sw_ar=2048 w_bytes=131072 a_bytes=4096 sx_bytes=256 sw_bytes=16384
+LARGE_RECORD case=5 M=2 N=64 K=4096 cycles=482539 reads=35328 read_beats=36096 burst_reads=256 read_payload=156160 writes=128 acks=128 wait_r=317952 wait_ar=0 bytes=262144 w_ar=32768 a_ar=256 sx_ar=256 sw_ar=2048 w_bytes=131072 a_bytes=8192 sx_bytes=512 sw_bytes=16384
+LARGE_RECORD case=6 M=4 N=64 K=4096 cycles=485959 reads=35840 read_beats=37376 burst_reads=512 read_payload=164864 writes=256 acks=256 wait_r=322560 wait_ar=0 bytes=262144 w_ar=32768 a_ar=512 sx_ar=512 sw_ar=2048 w_bytes=131072 a_bytes=16384 sx_bytes=1024 sw_bytes=16384
+LARGE_RECORD case=7 M=8 N=64 K=4096 cycles=971900 reads=71680 read_beats=74752 burst_reads=1024 read_payload=329728 writes=512 acks=512 wait_r=645120 wait_ar=0 bytes=262144 w_ar=65536 a_ar=1024 sx_ar=1024 sw_ar=4096 w_bytes=262144 a_bytes=32768 sx_bytes=2048 sw_bytes=32768
+ROUND7_LARGE_PASS tasks=8 bytes=2097152 checks=5021932
+$finish called at time : 27246160 ns : File "E:/speed-up/tb/tb_round7_linear.sv" Line 69
+run: Time (s): cpu = 00:00:00 ; elapsed = 00:00:37 . Memory (MB): peak = 221.297 ; gain = 0.000
+## quit
+INFO: xsimkernel Simulation Memory Usage: 17972 KB (Peak: 17972 KB), Simulation CPU Usage: 36202 ms
+INFO: [Common 17-206] Exiting xsim at Mon Oct 26 22:07:21 2026...

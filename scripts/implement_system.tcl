@@ -1,3 +1,12 @@
+if {[llength $argv]==2 && [lindex $argv 0] eq "--from-synthesis"} {
+    open_checkpoint [lindex $argv 1]
+} else {
+set target_top llm_top
+if {[llength $argv]>=2 && [lindex $argv 0] eq "--top"} {
+    set target_top [lindex $argv 1]
+    if {$target_top ni {llm_top llm_graph_top}} {error "Unsupported top"}
+    set argv [lrange $argv 2 end]
+}
 set root [file normalize [file join [file dirname [info script]] ..]]
 set f [open [file join $root config system_sources.txt] r]
 set names [split [string trim [read $f]] "\n"]
@@ -9,15 +18,13 @@ foreach {key value} $argv {
     if {![string is integer -strict $value] || $value<=0} {error "Invalid hardware parameter: $key=$value"}
     lappend generics "$key=$value"
 }
-synth_design -top llm_top -part xcvu9p-flga2104-2L-e -mode out_of_context -flatten_hierarchy rebuilt -generic $generics
+synth_design -top $target_top -part xcvu9p-flga2104-2L-e -mode out_of_context -flatten_hierarchy rebuilt -generic $generics
+}
 set_property HD.CLK_SRC BUFGCE_X0Y0 [get_ports clk]
 write_checkpoint -force synthesized.dcp
 report_utilization -file utilization_synth.rpt
 report_timing_summary -file timing_synth.rpt
 opt_design
-if {[file exists reference_routed.dcp]} {
-    read_checkpoint -incremental reference_routed.dcp
-}
 place_design
 phys_opt_design -directive AggressiveExplore
 route_design

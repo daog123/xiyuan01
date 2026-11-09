@@ -1,0 +1,33 @@
+#-----------------------------------------------------------
+# xsim v2025.2 (64-bit)
+# SW Build 6299465 on Fri Nov 14 19:35:11 GMT 2025
+# IP Build 6300035 on Fri Nov 14 10:48:45 MST 2025
+# SharedData Build 6298862 on Thu Nov 13 04:50:51 MST 2025
+# Start of session at: Mon Oct 26 22:07:46 2026
+# Process ID         : 33040
+# Current directory  : E:/speed-up/build/round7_protocol/tb_memory_round7_wide
+# Command line       : xsim.exe -mode tcl -source {xsim.dir/sim/xsim_script.tcl}
+# Log file           : E:/speed-up/build/round7_protocol/tb_memory_round7_wide/xsim.log
+# Journal file       : E:/speed-up/build/round7_protocol/tb_memory_round7_wide\xsim.jou
+# Running On         : LAPTOP-SCQRVP01
+# Platform           : Windows Server 2016 or Windows 10
+# Operating System   : 26200
+# Processor Detail   : Intel(R) Core(TM) i7-14650HX
+# CPU Frequency      : 2419 MHz
+# CPU Physical cores : 16
+# CPU Logical cores  : 24
+# Host memory        : 16873 MB
+# Swap memory        : 14815 MB
+# Total Virtual      : 31689 MB
+# Available Virtual  : 6435 MB
+#-----------------------------------------------------------
+source xsim.dir/sim/xsim_script.tcl
+# xsim {sim} -autoloadwcfg -tclbatch {E:/speed-up/scripts/run_xsim.tcl}
+Time resolution is 1 ps
+source E:/speed-up/scripts/run_xsim.tcl
+## run 20 ms
+STORAGE_BURST_COVERAGE bursts=379 required=0
+W4A8_MEMORY_TESTS_PASS real=1 rows=4 cols=4 tasks=29 checks=774659 holey=22 odd=0
+$finish called at time : 283360 ns : File "E:/speed-up/tb/tb_w4a8_memory.sv" Line 337
+## quit
+INFO: [Common 17-206] Exiting xsim at Mon Oct 26 22:07:49 2026...

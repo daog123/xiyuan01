@@ -1,4 +1,4 @@
-"""Unified source-based tests, implementation and evidence audit for ABI v2."""
+"""Unified source-based tests, implementation and evidence audit for ABI v5."""
 import argparse,hashlib,json,os,re,shutil,subprocess,sys
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
@@ -55,10 +55,32 @@ def test_suite(name,tools):
     names=MANIFEST.read_text(encoding='utf-8-sig').splitlines()
     sources=[ROOT/'rtl'/(n+'.sv') for n in names]+[ROOT/'tb/llm_test_shells.sv',ROOT/'tb/system_axi_memory.sv',ROOT/'tb'/('tb_accelerator.sv' if name=='system' else 'tb_attention.sv')]
     if name=='system':sources.append(ROOT/'tb/tb_system_mixed.sv')
-    tops=['tb_accelerator','tb_accelerator12','tb_accelerator32','tb_system_mixed'] if name=='system' else ['tb_attention','tb_attention3','tb_attention32','tb_attention_default']
+    tops=['tb_accelerator','tb_accelerator12','tb_accelerator32','tb_system_mixed'] if name=='system' else ['tb_attention','tb_attention3','tb_attention32','tb_attention_default','tb_attention_dma','tb_attention_dma3','tb_attention_dma32','tb_attention_dma_default']
     results=simulate(sources,tops,build,tools,'ACCELERATOR_TESTS_PASS' if name=='system' else 'ATTENTION_TESTS_PASS')
     result={'status':'PASS','simulations':results};verdict.write_text(json.dumps(result,indent=2)+'\n',encoding='utf-8')
     return result
+
+def test_projection(tools):
+    build=ROOT/'build/projection_v4';build.mkdir(parents=True,exist_ok=True)
+    verdict=build/'test_result.json';verdict.write_text('{"status":"RUNNING"}',encoding='utf-8')
+    run([sys.executable,ROOT/'model/projection_reference.py','--out',build/'vectors'],ROOT,build/'reference.log')
+    names=MANIFEST.read_text(encoding='utf-8-sig').splitlines()
+    sources=[ROOT/'rtl'/(n+'.sv') for n in names]+[ROOT/'tb/system_axi_memory.sv',ROOT/'tb/tb_projected_attention.sv']
+    simulations=simulate(sources,['tb_projected_attention','tb_projected_attention3','tb_projected_attention32','tb_projected_attention1'],build,tools,'PROJECTION_TESTS_PASS')
+    result=dict(status='PASS',simulations=simulations);verdict.write_text(json.dumps(result,indent=2)+'\n',encoding='utf-8')
+    return result
+
+
+def test_qkv(tools):
+    build=ROOT/'build/qkv_v5';build.mkdir(parents=True,exist_ok=True)
+    verdict=build/'test_result.json';verdict.write_text('{"status":"RUNNING"}',encoding='utf-8')
+    run([sys.executable,ROOT/'model/qkv_reference.py','--out',build/'vectors'],ROOT,build/'reference.log')
+    names=MANIFEST.read_text(encoding='utf-8-sig').splitlines()
+    sources=[ROOT/'rtl'/(n+'.sv') for n in names]+[ROOT/'tb/system_axi_memory.sv',ROOT/'tb/tb_qkv_attention.sv']
+    simulations=simulate(sources,['tb_qkv_attention','tb_qkv_attention3','tb_qkv_attention32','tb_qkv_attention1'],build,tools,'QKV_TESTS_PASS')
+    result=dict(status='PASS',simulations=simulations);verdict.write_text(json.dumps(result,indent=2)+'\n',encoding='utf-8')
+    return result
+
 
 def implement(tools,build):
     work=build/'implementation';work.mkdir(parents=True,exist_ok=True)
@@ -66,7 +88,7 @@ def implement(tools,build):
     if (work/'routed.dcp').exists():shutil.copy2(work/'routed.dcp',reference)
     verdict=build/'implementation_result.json';verdict.write_text('{"status":"RUNNING"}',encoding='utf-8')
     profile=json.loads(PROFILE.read_text(encoding='utf-8'))
-    if profile['top']!='llm_top' or profile['part']!='xcvu9p-flga2104-2L-e':
+    if profile['top'] not in ['llm_top','llm_graph_top'] or profile['part']!='xcvu9p-flga2104-2L-e':
         raise ValueError('This verified implementation flow supports llm_top on xcvu9p-flga2104-2L-e')
     (work/'clock.xdc').write_text(f"create_clock -name core_clk -period {profile['clock_period_ns']} [get_ports clk]\n",encoding='ascii')
     names=MANIFEST.read_text(encoding='utf-8-sig').splitlines()
@@ -79,7 +101,7 @@ def implement(tools,build):
                 TILE_K=l['tile_k'],MAX_M=l['max_m'],MAX_N=l['max_n'],MAX_K=l['max_k'],MAX_H=f['max_h'],CAPACITY=f['bridge_capacity'],
                 MAX_DIM=a['max_dimension'],MAX_TOKENS=a['max_tokens'])
     generic_args=[item for k,v in values.items() for item in (k,str(v))]
-    log=run([tools/'vivado.bat','-mode','batch','-source',(ROOT/'scripts/implement_system.tcl').as_posix(),'-tclargs',*generic_args],work,work/'console.log')
+    log=run([tools/'vivado.bat','-mode','batch','-source',(ROOT/'scripts/implement_system.tcl').as_posix(),'-tclargs','--top',profile['top'],*generic_args],work,work/'console.log')
     assert 'SYSTEM_OOC_IMPLEMENTATION_PASS' in log
     timing=(work/'timing_values.txt').read_text(encoding='ascii')
     m=re.search(r'WNS=([\d.-]+) WHS=([\d.-]+)',timing);assert m
@@ -94,7 +116,7 @@ def implement(tools,build):
 def audit(build):
     assert int((build/'software.log.exit').read_text(encoding='ascii'))==0
     assert re.search(r'\bOK\b',(build/'software.log').read_text(encoding='utf-8'))
-    paths=[ROOT/'build/system_v2/test_result.json',ROOT/'build/attention_v2/test_result.json',build/'implementation_result.json']
+    paths=[ROOT/'build/system_v2/test_result.json',ROOT/'build/attention_v2/test_result.json',ROOT/'build/projection_v4/test_result.json',ROOT/'build/qkv_v5/test_result.json',build/'implementation_result.json']
     for p in paths:
         data=json.loads(p.read_text(encoding='utf-8'));assert data['status']=='PASS',str(p)
         for group in data.get('simulations',[data]):
@@ -104,12 +126,12 @@ def audit(build):
 def main():
     p=argparse.ArgumentParser();p.add_argument('command',choices=['test','implement','status','legacy'])
     p.add_argument('--vivado-bin',type=Path,default=Path(os.environ.get('VIVADO_BIN','E:/AMDDesignTools/2025.2/Vivado/bin')))
-    p.add_argument('--suite',choices=['all','system','attention'],default='all');args=p.parse_args()
+    p.add_argument('--suite',choices=['all','system','attention','projection','qkv'],default='all');args=p.parse_args()
     build=ROOT/'build/project_v2';build.mkdir(parents=True,exist_ok=True)
     if args.command=='test':
         result={'status':'RUNNING'};(build/'test_result.json').write_text(json.dumps(result),encoding='utf-8')
         run([sys.executable,'-m','unittest','software.test_w4a8_software','software.test_w4a8_memory_task','software.test_system','-v'],ROOT,build/'software.log')
-        for name in (['system','attention'] if args.suite=='all' else [args.suite]):result[name]=test_suite(name,args.vivado_bin)
+        for name in (['system','attention','projection','qkv'] if args.suite=='all' else [args.suite]):result[name]=test_qkv(args.vivado_bin) if name=='qkv' else test_projection(args.vivado_bin) if name=='projection' else test_suite(name,args.vivado_bin)
         result['status']='PASS';(build/'test_result.json').write_text(json.dumps(result,indent=2)+'\n',encoding='utf-8')
         print('PROJECT_VALIDATION_PASS',flush=True)
     elif args.command=='implement':implement(args.vivado_bin,build)

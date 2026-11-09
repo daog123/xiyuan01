@@ -18,7 +18,7 @@ module w4a8_axi_memory # (parameter integer SIZE=65536)(
     bit written[0:SIZE/4-1];
     logic [31:0] rng=32'hf13579bd;
     bit rp=0,ap=0,wp=0,bp=0,extra=0;
-    integer ra,wa,rd_delay,bd_delay;
+    integer ra,wa,rd_delay,bd_delay,rsz,read_payload,remaining,read_beats,burst_reads;
     logic [63:0] wd;
     logic [7:0] ws;
     bit saved_re,saved_be,saved_rl,saved_ri,saved_bi;
@@ -48,25 +48,27 @@ module w4a8_axi_memory # (parameter integer SIZE=65536)(
     always @(posedge clk) begin
         if(rst) begin
             rp=0;ap=0;wp=0;bp=0;extra=0;rvalid<=0;bvalid<=0;rdata<=0;rid<=0;rresp<=0;rlast<=1;
-            bid<=0;bresp<=0;reads=0;writes=0;b_count=0;rng<=32'hf13579bd;
+            bid<=0;bresp<=0;reads=0;writes=0;b_count=0;read_payload=0;remaining=0;read_beats=0;burst_reads=0;rng<=32'hf13579bd;
             for(integer i=0;i<SIZE/4;i++) written[i]=0;
         end else begin
             rng<={rng[30:0],rng[31]^rng[21]^rng[1]^rng[0]};
             if(setup) begin
-                reads=0;writes=0;b_count=0;
+                reads=0;writes=0;b_count=0;read_payload=0;read_beats=0;burst_reads=0;
                 for(integer i=0;i<SIZE/4;i++) written[i]=0;
             end
             if(rvalid && rready) begin
                 rvalid<=0;
                 if(extra) begin extra=0;rp=1;rd_delay=3;saved_rl=0;end
+                else if(remaining>1) begin remaining--;ra+=rsz;rp=1;rd_delay=0;end
             end
             if(bvalid && bready) begin bvalid<=0;b_count++;end
-            if(rp && !rvalid) begin
+            if(rp && (!rvalid || rready)) begin
                 if(rd_delay>0) rd_delay--;
                 else begin
-                    rp=0;rvalid<=1;rdata<=64'(mem[ra]) << ((ra%8)*8);
+                    rp=0;rvalid<=1;rdata<=0;
+                    for(integer b=0;b<rsz;b++)rdata[((ra%8)+b)*8 +:8]<=mem[ra+b];
                     rid<=saved_ri?4'd1:4'd0;rresp<=saved_re?2'd2:2'd0;
-                    rlast<=!saved_rl;extra=saved_rl;
+                    rlast<=remaining==1 && !saved_rl;extra=saved_rl && remaining==1;
                 end
             end
             if(bp && !bvalid && !hold_b) begin
@@ -74,9 +76,12 @@ module w4a8_axi_memory # (parameter integer SIZE=65536)(
                 else begin bp=0;bvalid<=1;bresp<=saved_be?2'd2:2'd0;bid<=saved_bi?4'd1:4'd0;end
             end
             if(arvalid && arready) begin
-                if(arid!=0 || arlen!=0 || arsize!=0 || arburst!=1 || araddr>=SIZE || !source_byte(araddr))
+                if(arid!=0 || arsize>3 || araddr%(1<<arsize)!=0 || arburst!=1 || 65'(araddr)+((integer'(arlen)+1)<<arsize)>SIZE ||
+                    integer'(araddr[11:0])+((integer'(arlen)+1)<<arsize)>4096)
                     $fatal(1,"AXI_MEMORY_BAD_READ address=%h",araddr);
-                ra=araddr;rp=1;rd_delay=random_stalls?integer'(rng[15:12]):1;
+                rsz=1<<arsize;
+                for(integer b=0;b<rsz*(integer'(arlen)+1);b++)if(!source_byte(integer'(araddr)+b))$fatal(1,"AXI_MEMORY_READ_PADDING");
+                remaining=integer'(arlen)+1;read_payload+=rsz*remaining;read_beats+=remaining;if(arlen!=0) burst_reads++;ra=araddr;rp=1;rd_delay=random_stalls?integer'(rng[15:12]):1;
                 saved_re=inject_r;saved_rl=inject_rlast;saved_ri=inject_rid;reads++;
             end
             if(awvalid && awready) begin

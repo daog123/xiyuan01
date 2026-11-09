@@ -1,0 +1,39 @@
+-------------------------------------
+| Tool Version : Vivado v.2025.2
+| Date         : Wed Oct 28 20:43:01 2026
+| Host         : LAPTOP-SCQRVP01
+| Design       : design_1
+| Device       : xcvu9p-flga2104-2L-E-
+-------------------------------------
+
+For more information on clockInfo.txt clock routing debug file see https://support.xilinx.com/s/article/000035660?language=en_US
+
+***********************
+Running Pre-CRP Checker
+***********************
+Number of global clocks: 1
+	Number of BUFGCE: 1
+	Number of BUFGCE_HDIO: 0
+	Number of BUFG_CTRL: 0
+	Number of BUFGCE_DIV: 0
+	Number of BUFG_GT: 0
+	Number of BUFG_PS: 0
+	Number of BUFG_FABRIC: 0
+Pre-CRP Checker took 0 secs
+
+**************************************
+Clock Nets/Source Overview (CRP Input)
+**************************************
+Clock 1: clk
+	Clock source type: BUFGCE fixed to track 0
+	Clock source region: X2Y0
+	initial rect ((2, 0), (5, 3))
+
+
+
+*****************************
+Clocks With User Constraints:
+*****************************
+No clocks with user constraints found
+
+

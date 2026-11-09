@@ -1,0 +1,23 @@
+Vivado Simulator v2025.2
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
+Running: E:/AMDDesignTools/2025.2/Vivado/bin/unwrapped/win64.o/xelab.exe own_controlled -s ownsim -timescale 1ns/1ps 
+Multi-threading is on. Using 22 slave threads.
+Starting static elaboration
+Pass Through NonSizing Optimizer
+Completed static elaboration
+Starting simulation data flow analysis
+Completed simulation data flow analysis
+Time Resolution for simulation is 1ps
+Compiling module work.sync_sdp_ram(WIDTH=64)
+Compiling module work.sync_sdp_ram(WIDTH=32,DEPTH=5,ST...
+Compiling module work.w4_unpack
+Compiling module work.mac_pe
+Compiling module work.w4a8_compute_array(ROWS=8,COLS=8...
+Compiling module work.sync_sdp_ram(WIDTH=32,DEPTH=8,ST...
+Compiling module work.sync_sdp_ram(WIDTH=64,DEPTH=8,ST...
+Compiling module work.w4a8_wave(ROWS=8,COLS=8,TILE_K=3...
+Compiling module work.w4a8_reuse_memory(MAX_DATA=26214...
+Compiling module work.tb_w4a8_wave(ROWS=8,COLS=8,TILE_...
+Compiling module work.own_controlled
+Built simulation snapshot ownsim

@@ -1,0 +1,30 @@
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/sync_sdp_ram.sv" into library work
+INFO: [VRFC 10-311] analyzing module sync_sdp_ram
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/mac_pe.sv" into library work
+INFO: [VRFC 10-311] analyzing module mac_pe
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/mac_array.sv" into library work
+INFO: [VRFC 10-311] analyzing module mac_array
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/systolic_pe.sv" into library work
+INFO: [VRFC 10-311] analyzing module systolic_pe
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/systolic_array.sv" into library work
+INFO: [VRFC 10-311] analyzing module systolic_array
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/rtl/w4_unpack.sv" into library work
+INFO: [VRFC 10-311] analyzing module w4_unpack
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/Lenovo/Documents/ChatGPT/��Դ��Ŀ/.round8_core_work/current/wave.sv" into library work
+INFO: [VRFC 10-311] analyzing module w4a8_wave
+INFO: [VRFC 10-311] analyzing module w4a8_compute_array
+INFO: [VRFC 10-311] analyzing module w4a8_packed_pair
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "E:/speed-up/tb/w4a8_reuse_memory.sv" into library work
+INFO: [VRFC 10-311] analyzing module w4a8_reuse_memory
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/Lenovo/Documents/ChatGPT/��Դ��Ŀ/.round8_core_work/current/testbench.sv" into library work
+INFO: [VRFC 10-311] analyzing module tb_w4a8_wave
+INFO: [VRFC 10-311] analyzing module tb_w4a8_wave_directed
+INFO: [VRFC 10-311] analyzing module tb_w4a8_wave8
+INFO: [VRFC 10-311] analyzing module tb_w4a8_wave_tile4
+INFO: [VRFC 10-311] analyzing module tb_w4a8_wave_tile8
+INFO: [VRFC 10-311] analyzing module tb_w4a8_wave_alt
+INFO: [VRFC 10-311] analyzing module tb_w4a8_wave_words8
+INFO: [VRFC 10-311] analyzing module tb_w4a8_wave_single
+INFO: [VRFC 10-311] analyzing module tb_w4a8_wave_one
+INFO: [VRFC 10-2263] Analyzing SystemVerilog file "C:/Users/Lenovo/Documents/ChatGPT/��Դ��Ŀ/.round8_core_work/current/wrapper.sv" into library work
+INFO: [VRFC 10-311] analyzing module own_controlled

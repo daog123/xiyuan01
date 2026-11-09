@@ -8,6 +8,13 @@ class Completion:
     task_id: int
     status: int
     elapsed_cycles: int = 0
+    stage: int | None = None
+
+
+class TaskExecutionError(RuntimeError):
+    def __init__(self, completion):
+        self.completion=completion
+        super().__init__(f"W4A8 task failed with status {completion.status}, stage {completion.stage}")
 
 
 class W4A8Runtime:
@@ -41,7 +48,7 @@ class W4A8Runtime:
             completion = self.poll()
             if completion is not None:
                 if completion.status:
-                    raise RuntimeError(f"W4A8 task failed with status {completion.status}")
+                    raise TaskExecutionError(completion)
                 return completion
             sleep(poll_interval_s)
         raise TimeoutError("W4A8 completion timeout")

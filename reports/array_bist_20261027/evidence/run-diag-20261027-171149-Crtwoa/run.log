@@ -1,0 +1,15 @@
+RUN_DIRECTORY=/root/fpga/xiyuan_midterm_20261027/array_bist/run-diag-20261027-171149-Crtwoa
+TARGET_PCI=0000:84:00.0
+VOLATILE_PROGRAM_BEGIN file=/root/fpga/xiyuan_midterm_20261027/array_bist/diag.bit bytes=80159236 padded=80159264 initial_done=00000001 initial_link=00000003
+BITSTREAM_STAGED bytes=80159264
+BITSTREAM_STAGING_READBACK_PASS bytes=80159264
+DONE_AFTER_CLEAR=00000001
+PROGRAM_ASSERTED done=00000006 init=00000000 saw_done_low=1
+INIT_OBSERVED ready=1 init=00000001 done=00000006 link=00000000
+VOLATILE_PROGRAM_PASS done=00000001 link=00000000 saw_done_low=1 volatile_only=true
+FINAL_RAW_INIT=00000000 DONE=00000001 LINK=00000000
+DONE_SAMPLES_CAPTURED seconds=40.000 samples=72187 edges=589
+DONE_CAPTURE_PASS {"status": "PASS", "mode": "diag", "physical_capture": true, "accepted_frames": 5, "frames": [{"start": 3.249715498, "unit": 0.043328492537600655, "word": "c64a1d00d10a0068", "status": 13, "cases": 0, "checksum": 53514, "errors": 0}, {"start": 9.660794228, "unit": 0.04329748247176118, "word": "c64a1d00d10a0068", "status": 13, "cases": 0, "checksum": 53514, "errors": 0}, {"start": 16.072594875, "unit": 0.04332824092280801, "word": "c64a1d00d10a0068", "status": 13, "cases": 0, "checksum": 53514, "errors": 0}, {"start": 22.488166503, "unit": 0.0433658274465577, "word": "c64a1d00d10a0068", "status": 13, "cases": 0, "checksum": 53514, "errors": 0}, {"start": 28.904275981, "unit": 0.04334101595869015, "word": "c64a1d00d10a0068", "status": 13, "cases": 0, "checksum": 53514, "errors": 0}], "self_rtl_on_fpga": false}
+AUTONOMOUS_PHYSICAL_CAPTURE_PASS
+REFERENCE_RESTORED
+FINAL_EXIT=0

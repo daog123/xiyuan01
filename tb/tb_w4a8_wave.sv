@@ -1,6 +1,8 @@
 `timescale 1ns/1ps
 module tb_w4a8_wave;
-    parameter integer ROWS=4,COLS=4,TILE_K=8,GROUP_SIZE=32,MODES=3;
+    parameter integer ROWS=4,COLS=4,TILE_K=8,GROUP_SIZE=32,MODES=3,MAX_DATA=8192;
+    parameter bit COMPACT_SLOTS=0,EFFECTIVE_DRAIN=0,GEMV_FOLD=0,MULTIROW_FOLD=1,BROADCAST_MAC=0,PACKED_MAC=0;
+    parameter integer COPY_LANES=1,POST_LANES=1;
     parameter bit DOUBLE_BUFFER=1,SCALE_ONCE=1,PACK_COLS=1;
     parameter integer BUS_BYTES=8;
     parameter bit POST_OVERLAP=1,POST_PIPELINE=1,A_REUSE=1,SYSTOLIC=1,GROUP_STREAM=1;
@@ -11,7 +13,7 @@ module tb_w4a8_wave;
     logic array_pause=0;
     logic [31:0] array_cycles,array_drain_cycles,array_pause_cycles,array_mac_cycles;
     integer counted_macs=0,counted_array_cycles=0,counted_drain=0,counted_pause=0,counted_active=0;
-    integer held_array_checks=0,drain_checks=0,extra_array_resets=0;
+    integer held_array_checks=0,drain_checks=0,extra_array_resets=0,expected_drain_resets=0,directed_reset_cases=0;
     bit held_array=0,force_array_stall=0;
     logic [31:0] previous_advance_counters[0:4];
     logic post_pause=0;
@@ -38,18 +40,19 @@ module tb_w4a8_wave;
                        input_wait_cycles,output_wait_cycles,overlap_cycles;
     integer mode=0,m=0,n=0,k=0,ng=0;
     w4a8_wave #(.ROWS(ROWS),.COLS(COLS),.TILE_K(TILE_K),.GROUP_SIZE(GROUP_SIZE),
-                   .DOUBLE_BUFFER(DOUBLE_BUFFER),.BUS_BYTES(BUS_BYTES),.SCALE_ONCE(SCALE_ONCE),.PACK_COLS(PACK_COLS),.POST_OVERLAP(POST_OVERLAP),.POST_PIPELINE(POST_PIPELINE),.A_REUSE(A_REUSE),.SYSTOLIC(SYSTOLIC),.GROUP_STREAM(GROUP_STREAM)) dut(.*);
-    w4a8_reuse_memory #(.GROUP_SIZE(GROUP_SIZE),.BUS_BYTES(BUS_BYTES),.PACK_COLS(PACK_COLS)) memory(
+                   .DOUBLE_BUFFER(DOUBLE_BUFFER),.BUS_BYTES(BUS_BYTES),.SCALE_ONCE(SCALE_ONCE),.PACK_COLS(PACK_COLS),.POST_OVERLAP(POST_OVERLAP),.POST_PIPELINE(POST_PIPELINE),.A_REUSE(A_REUSE),.SYSTOLIC(SYSTOLIC),.GROUP_STREAM(GROUP_STREAM),.COMPACT_SLOTS(COMPACT_SLOTS),.EFFECTIVE_DRAIN(EFFECTIVE_DRAIN),.GEMV_FOLD(GEMV_FOLD),.MULTIROW_FOLD(MULTIROW_FOLD),
+                   .COPY_LANES(COPY_LANES),.POST_LANES(POST_LANES),.BROADCAST_MAC(BROADCAST_MAC),.PACKED_MAC(PACKED_MAC)) dut(.*);
+    w4a8_reuse_memory #(.GROUP_SIZE(GROUP_SIZE),.BUS_BYTES(BUS_BYTES),.PACK_COLS(PACK_COLS),.MAX_DATA(MAX_DATA)) memory(
         .clk(clk),.rst(rst),.task_start(start && start_ready),.mode(mode),.m(m),.n(n),.k(k),.ng(ng),
         .req_valid(req_valid),.req_ready(req_ready),.req_scale(req_scale),.req_activation(req_activation),.req_m(req_m),.req_n(req_n),.req_k(req_k),
         .req_ml(req_ml),.req_nl(req_nl),.req_kl(req_kl),.req_group(req_group),
         .in_valid(in_valid),.in_ready(in_ready),.in_data(in_data),.in_keep(in_keep));
     logic [7:0] unpack_byte=0;logic unpack_high=0;wire signed [7:0] unpack_value;
     w4_unpack unit_unpack(.packed_byte(unpack_byte),.high(unpack_high),.value(unpack_value));
-    integer golden[0:4095],psum_golden[0:8191];
+    integer golden[0:4095],psum_golden[0:MAX_DATA-1];
     bit seen[0:4095];
     integer f,rc,cases,cid,report,x,md,elapsed,outputs,groups_checked;
-    integer eb,ep,wb,ew,ea,es,et,em,ec,ml,nl,len,mt,nt,q,checks=0,comparisons=0,psum_comparisons=0,tasks=0;
+    integer eb,ep,wb,ew,ea,es,et,em,ec,ed,epi,ml,nl,len,mt,nt,q,checks=0,comparisons=0,psum_comparisons=0,tasks=0;
     integer ticks=0,all_overlap=0,all_input_wait=0,all_output_wait=0,held_input_checks=0;
     bit checking=0,force_output_stall=0,held_out=0,held_in=0,held_req=0,ready_overlap=0;
     logic [64:0] old_out;
@@ -60,6 +63,21 @@ module tb_w4a8_wave;
     localparam integer CACHE_DEPTH=((4096+GROUP_SIZE-1)/GROUP_SIZE)*((GROUP_SIZE+TILE_K-1)/TILE_K)*((TILE_K+BUS_BYTES-1)/BUS_BYTES);
     bit cache_valid[0:ROWS-1][0:CACHE_DEPTH-1];
     integer cache_epoch=-1,cache_hits=0,cache_writes=0,cache_switches=0;
+    function automatic integer reference_factor(input integer active_rows);
+        integer factor;
+        factor=1;
+        if(GEMV_FOLD && SYSTOLIC && A_REUSE && ROWS<=BUS_BYTES && ROWS<=2*W_BYTES &&
+            (ROWS&(ROWS-1))==0 && TILE_K%ROWS==0 && GROUP_SIZE%ROWS==0) begin
+            if(m==1) factor=ROWS;
+            else if(MULTIROW_FOLD)
+                while(factor<ROWS && active_rows*(factor*2)<=ROWS) factor*=2;
+        end
+        return factor;
+    endfunction
+    function automatic bit reference_fold(input integer active_rows);
+        return reference_factor(active_rows)>1 || (GEMV_FOLD && SYSTOLIC && A_REUSE && m==1 &&
+            ROWS<=BUS_BYTES && ROWS<=2*W_BYTES && (ROWS&(ROWS-1))==0 && TILE_K%ROWS==0 && GROUP_SIZE%ROWS==0);
+    endfunction
     task automatic require(input bit condition,input string message);
         checks++;
         if(!condition) $fatal(1,"W4A8_WAVE_CHECK_FAILED: %s time=%0t",message,$time);
@@ -115,7 +133,7 @@ module tb_w4a8_wave;
             if(busy && checking) begin
                 elapsed++;
                 if(SYSTOLIC && GROUP_STREAM && dut.state==dut.RUN && dut.array_step &&
-                    dut.run_k+1==dut.clen && dut.ck+dut.clen<k && (dut.ck+dut.clen)%GROUP_SIZE!=0)
+                    dut.run_k+dut.k_step>=dut.clen && dut.ck+dut.clen<k && (dut.ck+dut.clen)%GROUP_SIZE!=0)
                     last_released=dut.consumer_bank;
                 if(SYSTOLIC && GROUP_STREAM && dut.group_open && (dut.state==dut.WAIT_TILE || dut.state==dut.PRIME)) begin
                     require(!dut.array_step && !dut.mac_count,"tile seam freezes wave and MAC");
@@ -176,31 +194,32 @@ module tb_w4a8_wave;
                     require(dut.psum_state[dut.psum_cons]==dut.P_SCALING,"post consumer owns scaling bank");
                     require(dut.psum_m[dut.psum_cons]==dut.mt && dut.psum_n[dut.psum_cons]==dut.nt,"post output tile tag");
                 end
-                if(dut.p_retire) begin
+                if(dut.p_retire) for(integer lane=0;lane<POST_LANES;lane++) if(dut.mask1[lane]) begin
                     integer row,col,g,index;
-                    row=dut.psum_m[dut.psum_cons]+dut.tag1/COLS;
-                    col=dut.psum_n[dut.psum_cons]+dut.tag1%COLS;
+                    row=dut.psum_m[dut.psum_cons]+dut.tags1[lane]/COLS;
+                    col=dut.psum_n[dut.psum_cons]+dut.tags1[lane]%COLS;
                     g=dut.psum_group[dut.psum_cons];
                     if(row<m && col<n) begin
                         index=(row*ng+g)*n+col;
-                        require(dut.scaled==$signed(psum_golden[index])*
+                        require(dut.scaled_lanes[lane]==$signed(psum_golden[index])*
                             $signed({1'b0,memory.sx[row*ng+g][15:0]})*
-                            $signed({1'b0,memory.sw[g*n+col][15:0]}),"per-group scaled product matches exact reference");
+                            $signed({1'b0,memory.sw[g*n+col][15:0]}),"each post lane matches exact group reference");
                         scaled_checks++;
-                    end else require(dut.scaled==0,"invalid slot scaled product is zero");
+                    end else require(dut.scaled_lanes[lane]==0,"invalid post lane scales to zero");
                 end
                 if(dut.state==dut.WAIT_PSUM && dut.psum_state[dut.psum_prod]!=dut.P_FREE) full_queue_checks++;
                 if(dut.read_tile) require(dut.bank_state[dut.consumer_bank]==3,"consumer owns COMPUTING bank");
                 for(integer b=0;b<(DOUBLE_BUFFER?2:1);b++) begin
                     if(dut.bank_state[b]==2 && dut.bank_state[dut.consumer_bank]==3 && b!=dut.consumer_bank) ready_overlap=1;
                 end
-                if(dut.psum_write && dut.slot_valid) begin
-                    integer row,col,index;
-                    row=dut.mt+dut.slot/COLS;col=dut.nt+dut.slot%COLS;
-                    index=(row*ng+dut.ck/GROUP_SIZE)*n+col;
-                    require(dut.acc[dut.slot]===psum_golden[index],"whole group integer psum matches reference");
-                    groups_checked++;psum_comparisons++;
-                end
+                if(dut.psum_write) for(integer column=0;column<COLS;column++)
+                    if(column>=dut.slot%COLS && column<dut.slot%COLS+COPY_LANES && dut.slot/COLS<dut.cm_len && column<dut.cn_len) begin
+                        integer row,col,index;
+                        row=dut.mt+dut.slot/COLS;col=dut.nt+column;
+                        index=(row*ng+dut.ck/GROUP_SIZE)*n+col;
+                        require(dut.acc[(dut.slot/COLS)*COLS+column]===psum_golden[index],"every parallel snapshot lane matches exact group psum");
+                        groups_checked++;psum_comparisons++;
+                    end
                 if(out_valid && out_ready) begin
                     integer index;
                     require(out_m<m && out_n<n,"valid output coordinates");
@@ -222,7 +241,7 @@ module tb_w4a8_wave;
                     dut.systolic_core.array_core.a_path[r][c+1],
                     dut.systolic_core.array_core.b_path[r+1][c],
                     dut.systolic_core.array_core.a_vpath[r][c+1],
-                    dut.systolic_core.array_core.b_vpath[r+1][c],dut.acc[r*COLS+c]};
+                    dut.systolic_core.array_core.b_vpath[r+1][c],dut.pe_acc[r*COLS+c]};
                 always @(posedge clk) begin
                     if(rst) hold_seen=0;
                     else begin
@@ -252,6 +271,21 @@ module tb_w4a8_wave;
                 step=0;injected=0;active=1;group_origin=dut.ck;
                 for(integer p=0;p<ROWS*COLS;p++) expected_acc[p]=0;
             end else if(active && busy && dut.array_step) begin
+                require(dut.folded==reference_fold(dut.cm_len),"mapping selected from public shape");
+                if(reference_fold(dut.cm_len) || BROADCAST_MAC || PACKED_MAC) begin
+                    for(integer r=0;r<ROWS;r++) for(integer c=0;c<COLS;c++) begin
+                        integer q,code,row;bit fire;
+                        q=dut.ck+dut.run_k+(reference_fold(dut.cm_len)?r%reference_factor(dut.cm_len):0);
+                        row=dut.mt+(reference_fold(dut.cm_len)?r/reference_factor(dut.cm_len):r);
+                        fire=dut.state==dut.RUN && row<m && c<dut.cn_len && q<dut.ck+dut.clen;
+                        require(dut.mac_fire[r*COLS+c]===fire,"broadcast/folded valid term mask");
+                        if(fire) begin
+                            code=memory.packed_w[(dut.nt+c)*((k+1)/2)+q/2];code=(code>>((q%2)*4))&15;if(code>=8)code-=16;
+                            expected_acc[r*COLS+c]+=memory.a[row*k+q]*code;
+                        end
+                    end
+                    if(dut.state==dut.RUN) injected+=(dut.clen-dut.run_k<dut.k_step)?dut.clen-dut.run_k:dut.k_step;
+                end else begin
                 require(step<8192,"mathematical wave history capacity");
                 hv[step]=dut.state==dut.RUN;hml[step]=dut.cm_len;hnl[step]=dut.cn_len;
                 for(integer r=0;r<ROWS;r++)
@@ -274,18 +308,30 @@ module tb_w4a8_wave;
                     if(fire) expected_acc[r*COLS+c]+=ha[index][r]*hb[index][c];
                 end
                 if(hv[step]) injected++;
+                end
                 step++;
             end
             if(active && busy && dut.state==dut.WAIT_PSUM) begin
                 integer length;
                 length=(k-group_origin<GROUP_SIZE)?k-group_origin:GROUP_SIZE;
                 require(injected==length,"group contains exactly its valid K elements");
-                if(GROUP_STREAM) require(step==length+ROWS+COLS-2,"only one drain per group before snapshot");
+                if(GROUP_STREAM) begin
+                    integer delay,steps;
+                    delay=(dut.folded || BROADCAST_MAC || PACKED_MAC)?0:(EFFECTIVE_DRAIN?dut.cm_len+dut.cn_len-2:ROWS+COLS-2);
+                    steps=dut.folded?(length+reference_factor(dut.cm_len)-1)/reference_factor(dut.cm_len):length;
+                    require(step==steps+delay,"exact injection and effective drain count per group");
+                end
             end
             compare_now=active && busy;
             #1;
             if(compare_now) for(integer p=0;p<ROWS*COLS;p++) begin
-                require(dut.acc[p]===expected_acc[p],"per-PE integer sum matches independent stream history");
+                integer sum;
+                require(dut.pe_acc[p]===expected_acc[p],"physical PE sum matches independent mathematical stream");
+                sum=0;
+                if(reference_fold(dut.cm_len) && p/COLS<ROWS/reference_factor(dut.cm_len))
+                    for(integer lane=0;lane<reference_factor(dut.cm_len);lane++)
+                        sum+=expected_acc[((p/COLS)*reference_factor(dut.cm_len)+lane)*COLS+p%COLS];
+                require(dut.acc[p]===(reference_fold(dut.cm_len)?sum:expected_acc[p]),"logical group sum matches independent reduction");
                 shadow_checks++;
             end
         end
@@ -303,16 +349,24 @@ module tb_w4a8_wave;
         @(negedge clk);start=0;
     endtask
     task automatic expected_traffic;
-        ew=0;ea=0;es=0;et=0;eb=0;ep=0;
+        ew=0;ea=0;es=0;et=0;eb=0;ep=0;ec=0;ed=0;epi=0;
         for(mt=0;mt<m;mt+=ROWS) begin
             ml=(m-mt<ROWS)?m-mt:ROWS;
             for(nt=0;nt<n;nt+=COLS) begin
                 nl=(n-nt<COLS)?n-nt:COLS;q=0;
+                epi+=ng*(COMPACT_SLOTS?ml*((nl+POST_LANES-1)/POST_LANES):ROWS*((COLS+POST_LANES-1)/POST_LANES));
                 while(q<k) begin
                     len=TILE_K;
                     if(k-q<len) len=k-q;
                     if(GROUP_SIZE-q%GROUP_SIZE<len) len=GROUP_SIZE-q%GROUP_SIZE;
                     wb=(q%2+len+1)/2;
+                    begin
+                        integer stride;bit fold;
+                        fold=reference_fold(ml);
+                        stride=reference_factor(ml);ec+=(len+stride-1)/stride;
+                        if(SYSTOLIC && !fold && !BROADCAST_MAC && !PACKED_MAC &&
+                            (!GROUP_STREAM || q+len==k || (q+len)%GROUP_SIZE==0)) ed+=EFFECTIVE_DRAIN?ml+nl-2:ROWS+COLS-2;
+                    end
                     ew+=nl*wb;if(!A_REUSE || nt==0) ea+=ml*len;et++;
                     eb+=((nl+W_LANES-1)/W_LANES)*((wb+W_BYTES-1)/W_BYTES)+((!A_REUSE || nt==0)?ml*((len+BUS_BYTES-1)/BUS_BYTES):0);
                     if(!SCALE_ONCE || q+len==k || (q+len)%GROUP_SIZE==0) begin
@@ -324,7 +378,7 @@ module tb_w4a8_wave;
             end
         end
         ep=eb*BUS_BYTES-ew-ea-es;
-        em=m*n*k;ec=((m+ROWS-1)/ROWS)*((n+COLS-1)/COLS)*k;
+        em=m*n*k;
     endtask
     task automatic run_job(input integer case_id,feed_mode,input bit recovery);
         integer timeout_count;
@@ -363,7 +417,7 @@ module tb_w4a8_wave;
         end
         while(!done) begin
             @(negedge clk);timeout_count++;
-            require(timeout_count<200000,"per-task timeout");
+            require(timeout_count<4000000,"per-task timeout");
             require(!error,"no unexpected core error");
         end
         checking=0;expected_traffic();
@@ -372,15 +426,15 @@ module tb_w4a8_wave;
         require(weight_bytes==ew && activation_bytes==ea && scale_bytes==es,"accepted byte counters");
         require(array_cycles==counted_array_cycles && array_drain_cycles==counted_drain &&
             array_pause_cycles==counted_pause && array_mac_cycles==counted_active && valid_macs==counted_macs,"actual wavefront MAC and cycle counters");
-        require(array_drain_cycles==(SYSTOLIC?(GROUP_STREAM?((m+ROWS-1)/ROWS)*((n+COLS-1)/COLS)*ng:et)*(ROWS+COLS-2):0) &&
-            array_cycles==compute_cycles+array_drain_cycles,"per-tile wave drain count");
+        require(array_drain_cycles==ed && array_cycles==compute_cycles+array_drain_cycles,"independent vector/matrix advance budget");
         require(tile_handoffs==((SYSTOLIC && GROUP_STREAM)?et-((m+ROWS-1)/ROWS)*((n+COLS-1)/COLS)*ng:0),"group handoff count");
         require(wave_input_wait_cycles<=input_wait_cycles && wave_input_wait_cycles<=wave_hold_cycles,"wave hold is a subset of input/fixed cycles");
         require(valid_macs==em && compute_cycles==ec,"valid MAC and compute counters");
         require(memory.requests==et && memory.accepted==ew+ea+es,"memory packet totals");
         require(input_beats==eb && memory.beats==eb && padding_bytes==ep,"physical beat and padding counters");
         require(psum_groups==((m+ROWS-1)/ROWS)*((n+COLS-1)/COLS)*ng &&
-                post_issue_cycles==psum_groups*ROWS*COLS && post_retire_cycles==post_issue_cycles,"all physical group slots scaled");
+                post_issue_cycles==epi && post_retire_cycles==post_issue_cycles &&
+                dut.post_issue_elements==(COMPACT_SLOTS?m*n*ng:psum_groups*ROWS*COLS) && dut.post_retire_elements==dut.post_issue_elements,"all group elements scaled exactly once across post lanes");
         if(!POST_OVERLAP) require(compute_post_overlap_cycles==0,"serial compute and post do not overlap");
         require(array_cycles+array_pause_cycles+input_wait_cycles+output_wait_cycles+psum_wait_cycles+post_drain_cycles<=total_cycles,"exclusive critical-path classifications");
         if(!DOUBLE_BUFFER) require(overlap_cycles==0,"single bank cannot load during compute");
@@ -407,7 +461,7 @@ module tb_w4a8_wave;
         @(posedge clk);#1;require(error && !busy,"invalid dimensions rejected");
         @(negedge clk);start=0;
         f=$fopen("vectors.txt","r");require(f!=0,"vectors opened");
-        rc=$fscanf(f,"%d",cases);require(rc==1 && cases==15,"case header");
+        rc=$fscanf(f,"%d",cases);require(rc==1 && cases>=15,"case header");
         for(integer job=0;job<cases;job++) begin
             rc=$fscanf(f,"%d %d %d %d %d",cid,m,n,k,ng);require(rc==5,"dimensions parsed");
             require(ng==(k+GROUP_SIZE-1)/GROUP_SIZE,"group count");
@@ -417,8 +471,9 @@ module tb_w4a8_wave;
             for(x=0;x<ng*n;x++) begin rc=$fscanf(f,"%d",memory.sw[x]);require(rc==1,"weight scales");end
             for(x=0;x<m*n;x++) begin rc=$fscanf(f,"%d",golden[x]);require(rc==1,"output golden");end
             for(x=0;x<m*ng*n;x++) begin rc=$fscanf(f,"%d",psum_golden[x]);require(rc==1,"psum golden");end
-            for(md=0;md<MODES;md++) run_job(cid,md,0);
+            for(md=0;md<((cid>=15)?1:MODES);md++) run_job(cid,md,0);
         if(MODES>1 && cid==10) begin
+            directed_reset_cases++;
             // Random dataset; abort concurrently loading and computing.
             mode=2;launch();
             wait(dut.state==dut.RUN && (dut.loading || !DOUBLE_BUFFER));reset_device();
@@ -433,13 +488,14 @@ module tb_w4a8_wave;
             @(negedge clk);force_post_stall=1;
             repeat(4) @(negedge clk);reset_device();extra_post_resets++;
             run_job(cid,0,1);
-            if(SYSTOLIC && ROWS+COLS>2) begin
+            if(SYSTOLIC && ROWS+COLS>2 && !BROADCAST_MAC && !PACKED_MAC && !dut.folded) begin
+                expected_drain_resets++;
                 mode=0;launch();wait(dut.state==dut.DRAIN);
                 @(negedge clk);force_array_stall=1;array_pause=1;
                 repeat(4) @(posedge clk);
                 reset_device();extra_array_resets++;
                 run_job(cid,0,1);
-                if(GROUP_STREAM) begin
+                if(GROUP_STREAM && TILE_K<GROUP_SIZE) begin
                     seam_job=1;run_job(cid,1,1);seam_job=0;
                     mode=1;launch();
                     wait(dut.state==dut.WAIT_TILE && dut.group_open && dut.ck%GROUP_SIZE!=0 &&
@@ -458,19 +514,19 @@ module tb_w4a8_wave;
             if(DOUBLE_BUFFER) require(all_overlap>0 && ready_overlap,"load/compute overlap and ready bank covered");
         end
         if(MODES>1) begin
-            require(held_pipe_checks>0 && extra_post_resets==1,"pipeline pause and in-flight reset covered");
+            require(held_pipe_checks>0 && extra_post_resets==directed_reset_cases && directed_reset_cases>0,"pipeline pause and in-flight reset covered");
             if(POST_OVERLAP) require(full_queue_checks>0,"psum full backpressure covered");
         end
         if(A_REUSE) require(cache_hits>0 && cache_writes>0 && cache_switches>0,"cache reuse/loading/epoch transitions covered");
         if(MODES>1) require(held_array_checks>0,"array pause covered");
-        if(SYSTOLIC && ROWS+COLS>2) begin
+        if(SYSTOLIC && ROWS+COLS>2 && !BROADCAST_MAC && !PACKED_MAC) begin
             require(drain_checks>0,"wave drain covered");
-            if(MODES>1) require(extra_array_resets==1,"reset while wave drain paused covered");
+            if(MODES>1) require(extra_array_resets==expected_drain_resets,"reset while wave drain paused covered");
         end
         if(SYSTOLIC) require(shadow_checks>0,"per-PE stream history checked");
-        if(GROUP_STREAM && ROWS+COLS>2) begin
+        if(GROUP_STREAM && TILE_K<GROUP_SIZE && ROWS+COLS>2) begin
             require(seam_hold_checks>0 && reclaimed_writes>0,"live wave hold and freed-bank overwrite covered");
-            if(MODES>1) require(seam_resets==1 && seam_resumes==1,"seam starvation resume and reset covered");
+            if(MODES>1) require(seam_resets==expected_drain_resets && seam_resumes==expected_drain_resets,"seam starvation resume and reset covered");
         end
         $fclose(report);
         if(PACK_COLS && COLS>1 && BUS_BYTES==8) require(dual_writes>0 && holey_keeps>0,"paired writes and noncontiguous keeps covered");

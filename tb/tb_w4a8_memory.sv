@@ -1,7 +1,7 @@
 `timescale 1ns/1ps
 module tb_w4a8_memory #(
     parameter integer ROWS=4,COLS=4,TILE_K=8,GROUP_SIZE=32,
-    parameter bit REAL_CORE=1
+    parameter bit REAL_CORE=1,REQUIRE_BURST=0,WEIGHT_CACHE=1,SX_CACHE=1,CONTEXT_PROBE=0
 );
     import w4a8_memory_pkg::*;
     logic clk=0;always #5 clk=~clk;
@@ -28,7 +28,7 @@ module tb_w4a8_memory #(
     integer reads,writes,b_count;
     bit load_pause=0,post_pause=0,array_pause=0,force_load=0,force_array=0;
     wire core_rst=rst || core_reset;
-    w4a8_memory_bridge #(.ROWS(ROWS),.COLS(COLS),.TILE_K(TILE_K),.GROUP_SIZE(GROUP_SIZE)) bridge(.*);
+    w4a8_memory_bridge #(.ROWS(ROWS),.COLS(COLS),.TILE_K(TILE_K),.GROUP_SIZE(GROUP_SIZE),.WEIGHT_CACHE(WEIGHT_CACHE),.SX_CACHE(SX_CACHE)) bridge(.*);
     w4a8_axi_memory memory(.desc(loaded_desc),.*);
     integer golden[0:4095];
     generate if(REAL_CORE) begin: real_compute
@@ -59,7 +59,7 @@ module tb_w4a8_memory #(
                     len=(cfg_k-q<TILE_K)?cfg_k-q:TILE_K;
                     if(len>GROUP_SIZE-q%GROUP_SIZE) len=GROUP_SIZE-q%GROUP_SIZE;
                     req_m<=16'(mt);req_n<=16'(nt);req_k<=16'(q);req_kl<=inject_bad_req?16'd0:16'(len);
-                    req_ml<=16'((cfg_m-mt<ROWS)?cfg_m-mt:ROWS);
+                    req_ml<=16'((CONTEXT_PROBE && nt==0)?1:((cfg_m-mt<ROWS)?cfg_m-mt:ROWS));
                     req_nl<=16'((cfg_n-nt<COLS)?cfg_n-nt:COLS);req_group<=16'(q/GROUP_SIZE);
                     req_activation<=nt==0;req_scale<=q+len==cfg_k || (q+len)%GROUP_SIZE==0;
                     req_valid<=1;
@@ -87,12 +87,30 @@ module tb_w4a8_memory #(
             end
         end
     end endgenerate
+
+    bit corrupted_cache=0;
+    always @(negedge clk) if(!rst && !corrupted_cache) begin
+        if($test$plusargs("corrupt_weight_cache") && bridge.packet.state==4'd1 && bridge.packet.phase==0 &&
+            bridge.packet.weight_hit && bridge.packet.pos==0 && bridge.packet.slot==0) begin
+            bridge.packet.weight_row[0]=bridge.packet.weight_row[0]^128'd1;corrupted_cache=1;
+        end
+        if($test$plusargs("corrupt_sx_cache") && bridge.packet.state==4'd1 && bridge.packet.phase==2 &&
+            bridge.packet.sx_hit && bridge.packet.rg==0 && bridge.packet.pos==0) begin
+            bridge.packet.scale_byte_bank[0].bytes[0]=bridge.packet.scale_byte_bank[0].bytes[0]^8'd1;corrupted_cache=1;
+        end
+    end
+
     logic [7:0] original[0:65535];
     logic [63:0] expected_data[0:10000];logic [7:0] expected_keep[0:10000];
     integer expected_addr[0:100000];
     integer ep=0,cp=0,ea=0,ca=0,outputs=0,checks=0,ticks=0,tasks=0,report,odd_requests=0,holey=0;
-    integer aw_first=0,w_first=0,start_count=0;
+    integer aw_first=0,w_first=0,start_count=0,burst_count=0;
     bit pending_aw=0,pending_w=0;
+    // Packet order remains exact. Row prefetch can reorder legal reads; scale
+    // reuse removes only independently predicted repeated sx bytes.
+    integer expected_read_count[0:65535];
+    bit reference_sx_valid[0:127],reference_tag_valid=0,reference_sx_hit=0;
+    integer reference_m=0,reference_ml=0,logical_bytes=0,ml_context_changes=0;
     bit checking=0,seen[0:4095],held_in=0,held_ar=0,held_aw=0,held_w=0,held_completion=0,held_req=0,held_out=0;
     logic [71:0] old_in,old_w;logic [31:0] old_ar,old_aw;logic [35:0] old_completion;
     logic [113:0] old_req;logic [64:0] old_out;
@@ -118,19 +136,29 @@ module tb_w4a8_memory #(
                     3:addr=loaded_desc.sw_base+req_group*loaded_desc.sw_stride+2*req_n+pos+j;
                 endcase
                 require(ea<100000 && addr>=0 && addr<65536,"reference address bounds");
-                expected_addr[ea]=addr;ea++;data[j*8 +:8]=original[addr];keep[j]=1;
+                logical_bytes++;
+                if(phase!=2 || !reference_sx_hit) begin
+                    expected_addr[ea]=addr;ea++;expected_read_count[addr]++;
+                end
+                data[j*8 +:8]=original[addr];keep[j]=1;
             end
         end
         require(ep<10000,"packet scoreboard bounds");expected_data[ep]=data;expected_keep[ep]=keep;ep++;
     endtask
     task automatic enumerate_request;
         integer span;
+        if(reference_tag_valid && reference_m==req_m && reference_ml!=req_ml)ml_context_changes++;
+        if(!reference_tag_valid || reference_m!=req_m || reference_ml!=req_ml)
+            for(integer g=0;g<128;g++)reference_sx_valid[g]=0;
+        reference_m=req_m;reference_ml=req_ml;reference_tag_valid=1;
+        reference_sx_hit=SX_CACHE && req_group<128 && reference_sx_valid[req_group];
         span=(req_k%2+req_kl+1)/2;
         for(integer c=0;c<req_nl;c+=2) for(integer p=0;p<span;p+=4) add_packet(0,c,p,span);
         if(req_activation) for(integer r=0;r<req_ml;r++) for(integer p=0;p<req_kl;p+=8) add_packet(1,r,p,req_kl);
         if(req_scale) begin
             for(integer p=0;p<2*req_ml;p+=8) add_packet(2,0,p,2*req_ml);
             for(integer p=0;p<2*req_nl;p+=8) add_packet(3,0,p,2*req_nl);
+            if(SX_CACHE && req_group<128)reference_sx_valid[req_group]=1;
         end
     endtask
     always @(negedge clk) begin
@@ -147,6 +175,7 @@ module tb_w4a8_memory #(
         if(rst) begin held_ar=0;held_aw=0;held_w=0;held_completion=0;pending_aw=0;pending_w=0;end
         else begin
             if(core_start) start_count++;
+            if(arvalid && arready && arlen!=0) burst_count++;
             if(awvalid && awready) begin if(!pending_w) aw_first++;pending_aw=1;end
             if(wvalid && wready) begin if(!pending_aw) w_first++;pending_w=1;end
             if(bvalid && bready) begin pending_aw=0;pending_w=0;end
@@ -166,10 +195,15 @@ module tb_w4a8_memory #(
             held_completion=completion_valid && !completion_ready;old_completion={completion_task_id,completion_status};
             if(checking) begin
                 if(req_valid && req_ready) begin
+                    require(ca==ea,"previous request exact read footprint drained before next request");
                     enumerate_request();if(req_k[0]) odd_requests++;
                 end
                 if(arvalid && arready) begin
-                    require(ca<ea && araddr==expected_addr[ca],"AR exact sequence, no lost or extra read");ca++;
+                    for(integer b=0;b<((integer'(arlen)+1)<<arsize);b++)begin
+                        require(ca<ea && araddr+b<65536 && expected_read_count[araddr+b]>0,"AR useful byte multiplicity, no padding/extra/duplicate read");
+                        if(!WEIGHT_CACHE && !SX_CACHE)require(araddr+b==expected_addr[ca],"disabled caches preserve original AR order");
+                        expected_read_count[araddr+b]--;ca++;
+                    end
                 end
                 if(in_valid && in_ready) begin
                     require(cp<ep && in_keep===expected_keep[cp] && in_data===expected_data[cp],"packet data/keep exact");cp++;
@@ -202,7 +236,9 @@ module tb_w4a8_memory #(
         if($test$plusargs("corrupt_expected")) golden[0]=golden[0]+1;
         $readmemh($sformatf("g%0d_job%0d.hex",GROUP_SIZE,job),memory.mem);
         for(integer i=0;i<65536;i++) original[i]=memory.mem[i];
-        task_desc=loaded_desc;ep=0;cp=0;ea=0;ca=0;outputs=0;
+        task_desc=loaded_desc;ep=0;cp=0;ea=0;ca=0;outputs=0;logical_bytes=0;reference_tag_valid=0;
+        for(integer i=0;i<65536;i++)expected_read_count[i]=0;
+        for(integer g=0;g<128;g++)reference_sx_valid[g]=0;
         for(integer i=0;i<4096;i++) seen[i]=0;
         @(negedge clk);setup=1;@(negedge clk);setup=0;
     endtask
@@ -230,8 +266,9 @@ module tb_w4a8_memory #(
                 (i-loaded_desc.y_base)%loaded_desc.y_stride<4*loaded_desc.n;
             if(!destination) require(memory.mem[i]===original[i],"guard/source/padding protected");
         end
-        require(outputs==loaded_desc.m*loaded_desc.n && cp==ep && ca==ea && reads==ea && writes==outputs && b_count==outputs,"scoreboard drained");
-        require(read_bytes==ea && write_bytes==4*outputs && packet_bus_bytes==8*ep,"traffic counters");
+        require(outputs==loaded_desc.m*loaded_desc.n && cp==ep && ca==ea && memory.read_payload==ea && writes==outputs && b_count==outputs,"scoreboard drained");
+        require(packet_bytes==logical_bytes,"all logical packet bytes preserved with sx reuse");
+        require(read_bus_bytes==8*memory.read_beats && read_bytes==ea && write_bytes==4*outputs && packet_bus_bytes==8*ep,"traffic counters");
         $fdisplay(report,"%0d,%0d,%0d,%0d,%0d,%0d,%0d,%0d,%0d,%0d,%0d,%0d,%0d,%0d,%0d",loaded_desc.task_id,cycles,read_bytes,write_bytes,read_bus_bytes,write_bus_bytes,packet_bytes,packet_bus_bytes,read_wait,write_wait,input_wait,output_wait,packet_high_water,write_high_water,outputs);
     endtask
     initial begin: tests
@@ -291,10 +328,13 @@ module tb_w4a8_memory #(
         load_job(0);hold_b=1;submit();timeout_count=0;
         while(writes==0) begin @(negedge clk);timeout_count++;require(timeout_count<250000,"write reset point");end
         reset_all();load_job(1);checking=1;submit();wait_completion(MEM_OK);compare_memory();checking=0;
+        if(CONTEXT_PROBE)require(ml_context_changes>0,"same-M changed-ml cache context exercised");
+        if(REQUIRE_BURST) require(burst_count>0,"actual multi-beat burst observed by exact byte oracle");
         require(holey>0,"noncontiguous keep observed");
         require(aw_first>0 && w_first>0,"both independent AW/W handshake orders");
         if(TILE_K%2) require(odd_requests>0,"odd req_k observed");
         require(input_wait>0 && output_wait>0 && write_high_water==1,"pause and finite write slot exercised");
+        $display("STORAGE_BURST_COVERAGE bursts=%0d required=%0d",burst_count,REQUIRE_BURST);
         $fclose(report);$display("W4A8_MEMORY_TESTS_PASS real=%0d rows=%0d cols=%0d tasks=%0d checks=%0d holey=%0d odd=%0d",REAL_CORE,ROWS,COLS,tasks,checks,holey,odd_requests);$finish;
     end
     initial begin #100000000;$fatal(1,"W4A8_MEMORY_GLOBAL_TIMEOUT");end
@@ -302,3 +342,11 @@ endmodule
 module tb_w4a8_memory8;tb_w4a8_memory #(.ROWS(8),.COLS(8)) test();endmodule
 module tb_w4a8_memory_alt;tb_w4a8_memory #(.ROWS(2),.COLS(3),.TILE_K(5),.GROUP_SIZE(12)) test();endmodule
 module tb_w4a8_memory_unit;tb_w4a8_memory #(.ROWS(2),.COLS(3),.TILE_K(5),.GROUP_SIZE(12),.REAL_CORE(0)) test();endmodule
+
+module tb_memory_round7_off;tb_w4a8_memory #(.TILE_K(32),.WEIGHT_CACHE(0),.SX_CACHE(0)) test();endmodule
+module tb_memory_round7_weight;tb_w4a8_memory #(.TILE_K(32),.SX_CACHE(0)) test();endmodule
+module tb_memory_round7_scale;tb_w4a8_memory #(.TILE_K(32),.WEIGHT_CACHE(0)) test();endmodule
+module tb_memory_round7_wide;tb_w4a8_memory #(.TILE_K(64),.GROUP_SIZE(128)) test();endmodule
+module tb_memory_round7_group_tail;tb_w4a8_memory #(.TILE_K(32),.GROUP_SIZE(12)) test();endmodule
+
+module tb_memory_round7_context;tb_w4a8_memory #(.TILE_K(32),.REAL_CORE(0),.CONTEXT_PROBE(1)) test();endmodule

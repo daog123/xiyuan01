@@ -22,7 +22,7 @@ module ffn_dma #(
         WRITE_CMD,WRITE_ACK,FINISH,DRAIN,COMPLETE} state_t;
     state_t state;
     accelerator_pkg::ffn_plan_t active;
-    logic [15:0] row,col;logic branch;logic [1:0] byte_index,write_kind;
+    logic [15:0] row,col;logic branch;logic [1:0] write_kind;
     logic [31:0] word_value;
     logic cfg_ready,bridge_in_ready,qvalid,qready,bridge_done,done_seen;
     logic [1:0] bridge_error;
@@ -31,7 +31,7 @@ module ffn_dma #(
     logic [7:0] saved_q;logic [15:0] saved_row,saved_group,saved_index,saved_scale;
     logic saved_last;
     logic rd_valid,rd_ready,rsp_valid,rsp_ready,rsp_error,rd_idle;
-    logic [7:0] rsp_data,write_data;
+    logic [63:0] rsp_data;logic [3:0] rsp_bytes;logic [7:0] write_data;
     logic [ADDR_WIDTH-1:0] read_address,write_address;
     logic wr_valid,wr_ready,ack_valid,ack_error,wr_idle;
     wire local_reset=rst || state==IDLE || state==COMPLETE;
@@ -39,7 +39,7 @@ module ffn_dma #(
     assign task_ready=state==IDLE && !rst;
     assign completion_valid=state==COMPLETE && !rst;
     assign read_address=ADDR_WIDTH'((branch?active.up_task.desc.y_addr:active.gate_task.desc.y_addr)+
-        64'(row)*64'(branch?active.up_task.desc.y_stride:active.gate_task.desc.y_stride)+4*64'(col)+64'(byte_index));
+        64'(row)*64'(branch?active.up_task.desc.y_stride:active.gate_task.desc.y_stride)+4*64'(col));
     always_comb begin
         write_address=ADDR_WIDTH'(active.down_task.desc.a_addr+64'(saved_row)*64'(active.down_task.desc.a_stride)+
             64'(saved_group)*GROUP_SIZE+64'(saved_index));
@@ -54,8 +54,8 @@ module ffn_dma #(
     assign rsp_ready=(state==READ_RSP || state==DRAIN) && !rst;
     assign wr_valid=state==WRITE_CMD && !rst;
     assign qready=state==WAIT_QUANT && !rst;
-    w4a8_axi_read #(.ADDR_WIDTH(ADDR_WIDTH)) reader(
-        .clk(clk),.rst(local_reset),.cmd_valid(rd_valid),.cmd_ready(rd_ready),.cmd_addr(read_address),
+    w4a8_axi_read_chunk #(.ADDR_WIDTH(ADDR_WIDTH)) reader(
+        .clk(clk),.rst(local_reset),.cmd_valid(rd_valid),.cmd_ready(rd_ready),.cmd_addr(read_address),.cmd_bytes(4'd4),.rsp_bytes(rsp_bytes),
         .rsp_valid(rsp_valid),.rsp_ready(rsp_ready),.rsp_data(rsp_data),.rsp_error(rsp_error),.idle(rd_idle),
         .arvalid(arvalid),.arready(arready),.araddr(araddr),.arid(arid),.arlen(arlen),.arsize(arsize),.arburst(arburst),
         .rvalid(rvalid),.rready(rready),.rdata(rdata),.rid(rid),.rresp(rresp),.rlast(rlast));
@@ -75,25 +75,21 @@ module ffn_dma #(
         .busy(),.done(bridge_done),.error_code(bridge_error));
     always_ff @(posedge clk) begin
         if(rst) begin
-            state<=IDLE;active<='0;row<=0;col<=0;branch<=0;byte_index<=0;word_value<=0;
+            state<=IDLE;active<='0;row<=0;col<=0;branch<=0;word_value<=0;
             write_kind<=0;saved_q<=0;saved_row<=0;saved_group<=0;saved_index<=0;saved_scale<=0;saved_last<=0;
             done_seen<=0;activation_written<=0;scale_written<=0;completion_status<=STATUS_OK;
         end else begin
             if(bridge_done) done_seen<=1;
             case(state)
                 IDLE:if(task_valid) begin
-                    active<=plan;row<=0;col<=0;branch<=0;byte_index<=0;done_seen<=0;
+                    active<=plan;row<=0;col<=0;branch<=0;done_seen<=0;
                     activation_written<=0;scale_written<=0;completion_status<=STATUS_OK;state<=CONFIGURE;
                 end
                 CONFIGURE:if(cfg_ready) state<=READ_CMD;
                 READ_CMD:if(rd_ready) state<=READ_RSP;
                 READ_RSP:if(rsp_valid) begin
-                    if(rsp_error) begin completion_status<=STATUS_READ_ERROR;state<=DRAIN;end
-                    else begin
-                        word_value[byte_index*8 +:8]<=rsp_data;
-                        if(byte_index==3) begin byte_index<=0;state<=FEED;end
-                        else begin byte_index<=byte_index+1;state<=READ_CMD;end
-                    end
+                    if(rsp_error || rsp_bytes!=4) begin completion_status<=STATUS_READ_ERROR;state<=DRAIN;end
+                    else begin word_value<=rsp_data[31:0];state<=FEED;end
                 end
                 FEED:if(bridge_in_ready) begin
                     if(!branch) begin branch<=1;state<=READ_CMD;end

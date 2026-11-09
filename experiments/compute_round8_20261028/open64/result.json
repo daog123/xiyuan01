@@ -1,0 +1,26 @@
+{
+  "status": "PASS",
+  "selected": {
+    "format_id": "1",
+    "case_id": "21",
+    "M": "1",
+    "N": "64",
+    "K": "2048",
+    "cycles": "9564",
+    "valid_macs": "131072",
+    "input_issue_cycles": "2048",
+    "weight_requests": "1024",
+    "core_cycles": "9292",
+    "preload_cycles": "272"
+  },
+  "source_sha256": {
+    "E:\\speed-up\\build\\upstream_compute\\sources\\openTPU\\rtl\\top\\otpu_pkg.sv": "c0ea645315543b7475a165676e176d9a4901bc0c374daa972b830e8bdbb500ac",
+    "E:\\speed-up\\build\\upstream_compute\\sources\\openTPU\\rtl\\vpu\\otpu_fp.sv": "16fc71077a7c7f9c7ef98ee8791c27eee340d6704cbdb0f1852104c64b2bbd48",
+    "E:\\speed-up\\build\\upstream_compute\\sources\\openTPU\\rtl\\vpu\\otpu_fpipe.sv": "50d13a22ce78a2e02f9e92a301e6626696dd8adbb88362960dd1385e34634cee",
+    "E:\\speed-up\\build\\upstream_compute\\sources\\openTPU\\rtl\\tech\\generic\\otpu_tech_dsp.sv": "ecafdff412b0d09a29d310f3a8d49a2cc2e6587230d34bb0ea39189d3f862446",
+    "E:\\speed-up\\build\\upstream_compute\\sources\\openTPU\\rtl\\tech\\generic\\otpu_tech_ram.sv": "29f9ebd77c7839a5ca5ba7ed2c7fea32bcde61c646b89fa94ecf352a7f86d981",
+    "C:\\Users\\Lenovo\\Documents\\ChatGPT\\\u66e6\u6e90\u9879\u76ee\\.round8_core_work\\open64\\mxu_xsim.sv": "3a3b3e0b4e5384ee74b473305059da221251e0c29bdcf7a9be288257b0aaa701",
+    "C:\\Users\\Lenovo\\Documents\\ChatGPT\\\u66e6\u6e90\u9879\u76ee\\.round8_core_work\\open64\\testbench.sv": "3623e7b43fd8c1fd3a11992eed60ab678dfdaff57c692f9951b698eee6770942",
+    "C:\\Users\\Lenovo\\Documents\\ChatGPT\\\u66e6\u6e90\u9879\u76ee\\.round8_core_work\\open64\\common_vectors.txt": "ad1dda349896f0a62acaf9d68d2196a5ba668005d1b1196e8e410e49bf189e92"
+  }
+}
